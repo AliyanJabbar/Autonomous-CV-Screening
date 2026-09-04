@@ -1,16 +1,22 @@
-import { useSession, signIn, signOut } from "next-auth/react";
+"use client";
+
+import { useSession, signIn, signOut } from "@/lib/auth-client";
 
 export const useAuth = () => {
-  const { data: session, status, update } = useSession();
+  const { data: sessionData, isPending, error, refetch } = useSession();
+
+  const user = sessionData?.user || null;
+  const session = sessionData?.session || null;
 
   return {
-    user: session?.user || null,
+    user,
     session,
-    status,
-    isLoading: status === "loading",
+    status: isPending ? "loading" : session ? "authenticated" : "unauthenticated",
+    isLoading: isPending,
     isAuthenticated: !!session,
+    error,
     signIn,
     signOut,
-    update,
+    refetch,
   };
 };

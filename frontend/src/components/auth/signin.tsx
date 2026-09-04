@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect } from "react"; // Import useEffect
-import { signIn } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { signIn } from "@/lib/auth-client";
 import { Loader2, TriangleAlert, Eye, EyeOff } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 
@@ -20,16 +20,12 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 
-// Import the server action
-import { checkEmailStatus } from "@/actions/check-user-existence"; // Ensure this path matches your file
-
 const SignIn = () => {
   const router = useRouter();
   const params = useSearchParams();
 
   // State variables
   const [loading, setLoading] = useState(false);
-  const [loadingGithub, setLoadingGithub] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [loadingLogin, setLoadingLogin] = useState(false);
 
@@ -37,11 +33,10 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
 
-  // NEW: Local Error State
+  // Local Error State
   const [errorState, setErrorState] = useState("");
   const [createdMsg, setCreatedMsg] = useState(params.get("created"));
 
-  // Effect: Sync URL errors to local state on initial load only
   useEffect(() => {
     const urlError = params.get("error");
     if (urlError) {
@@ -57,53 +52,45 @@ const SignIn = () => {
   const onCredentialSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // 🔴 CRITICAL FIX: Clear previous errors immediately on submit
     setErrorState("");
     setCreatedMsg(null);
-
     setLoading(true);
     setLoadingLogin(true);
 
     try {
-      // --- STEP 1: Check if this email belongs to a Google-only account ---
-      const status = await checkEmailStatus(email);
-
-      if (status.error) {
-        setLoading(false);
-        setLoadingLogin(false);
-        setErrorState(status.error); // Set local error
-        return;
-      }
-      // ---------------------------------------------------------------------
-    } catch (err) {
-      console.error("Auth check failed", err);
-    }
-
-    // --- STEP 2: Proceed with standard Auth.js Login ---
-    const result = await signIn("credentials", {
-      email: email,
-      password: password,
-      redirect: false,
-    });
-
-    if (result?.error) {
+      await signIn.email(
+        {
+          email,
+          password,
+        },
+        {
+          onSuccess: () => {
+            router.push("/");
+            router.refresh();
+          },
+          onError: (ctx) => {
+            setLoading(false);
+            setLoadingLogin(false);
+            setErrorState(ctx.error.message || "Invalid email or password");
+          },
+        }
+      );
+    } catch (err: any) {
       setLoading(false);
       setLoadingLogin(false);
-      setErrorState("Invalid email or password"); // Set local error
-    } else {
-      // Success!
-      router.push("/");
-      router.refresh(); // Ensure the new session is loaded
+      setErrorState(err?.message || "Failed to sign in");
     }
   };
 
   // 2. Handle Google Login
-  const onProviderSignIn = (provider: "github" | "google") => {
+  const onProviderSignIn = async (provider: "google") => {
     setLoading(true);
-    setLoadingGithub(provider === "github");
-    setLoadingGoogle(provider === "google");
+    setLoadingGoogle(true);
 
-    signIn(provider, { callbackUrl: "/" });
+    await signIn.social({
+      provider,
+      callbackURL: "/",
+    });
   };
 
   const handleTabChange = (value: string) => {
@@ -119,10 +106,7 @@ const SignIn = () => {
       <div className="hidden lg:flex lg:w-1/2 bg-slate-900 flex-col justify-between p-12 fixed left-0 top-0 h-screen overflow-hidden z-10">
         <div className="flex flex-col items-center justify-center flex-1">
           <div className="text-center space-y-8">
-            <Link
-              href="/"
-              rel="noopener noreferrer"
-            >
+            <Link href="/" rel="noopener noreferrer">
               <Image
                 src="/logo.png"
                 alt="Logo"
@@ -181,10 +165,16 @@ const SignIn = () => {
                     className="w-full mt-4"
                   >
                     <TabsList className="grid w-full grid-cols-2 h-10 bg-slate-800">
-                      <TabsTrigger value="signin" className="h-8 text-sm text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700">
+                      <TabsTrigger
+                        value="signin"
+                        className="h-8 text-sm text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700"
+                      >
                         Sign In
                       </TabsTrigger>
-                      <TabsTrigger value="signup" className="h-8 text-sm text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700">
+                      <TabsTrigger
+                        value="signup"
+                        className="h-8 text-sm text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700"
+                      >
                         Sign Up
                       </TabsTrigger>
                     </TabsList>
@@ -267,7 +257,10 @@ const SignIn = () => {
                 {/* Credentials Form */}
                 <form onSubmit={onCredentialSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-base sm:text-lg text-slate-300">
+                    <Label
+                      htmlFor="email"
+                      className="text-base sm:text-lg text-slate-300"
+                    >
                       Email
                     </Label>
                     <Input

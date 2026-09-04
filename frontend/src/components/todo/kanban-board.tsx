@@ -10,10 +10,10 @@ import {
   FormEvent,
 } from "react";
 import { Plus, Trash2, Flame, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { toast } from "sonner";
 import TodoAPI, { Todo } from "@/services/api";
-import { useSession } from "next-auth/react";
+import { useSession } from "@/lib/auth-client";
 import BoardSkeleton from "./board-skeleton";
 
 // --- Types ---
@@ -76,8 +76,10 @@ export default function KanbanBoard() {
 }
 
 const Board = () => {
-  const { data: session, status } = useSession();
-  const token = (session as any)?.accessToken; // Access our custom token
+  const { data: sessionData, isPending } = useSession();
+  const token = sessionData?.session?.token;
+  const isAuthenticated = !!sessionData?.session;
+
   const [cards, setCards] = useState<CardType[]>([]);
   const [loading, setLoading] = useState(true);
   const wsRef = useRef<WebSocket | null>(null);
@@ -85,17 +87,17 @@ const Board = () => {
 
   useEffect(() => {
     const fetchTodos = async () => {
-      if (status !== "authenticated" || !token) {
+      if (!isAuthenticated || !token) {
         setLoading(false);
         return;
       }
       try {
         const todos = await TodoAPI.getTodos(token);
-        const cardData = todos.map(todo => ({
+        const cardData = todos.map((todo) => ({
           id: todo.id.toString(),
           title: todo.title,
           column: todo.category as ColumnType,
-          stableId: todo.id.toString()
+          stableId: todo.id.toString(),
         }));
         setCards(cardData);
       } catch (error) {
@@ -106,14 +108,19 @@ const Board = () => {
     };
 
     fetchTodos();
-  }, [status, token]);
+  }, [isAuthenticated, token]);
 
   // WebSocket connection for real-time updates
   useEffect(() => {
-    if (status !== "authenticated" || !token) return;
+    if (!isAuthenticated || !token) return;
 
-    const BACKEND_WS_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/^http/, "ws");
-    const wsUrl = `${BACKEND_WS_URL}/ws/todos?token=${encodeURIComponent(token)}`;
+    const BACKEND_WS_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(
+      /^http/,
+      "ws"
+    );
+    const wsUrl = `${BACKEND_WS_URL}/ws/todos?token=${encodeURIComponent(
+      token
+    )}`;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
@@ -130,18 +137,17 @@ const Board = () => {
             id: data.todo.id.toString(),
             title: data.todo.title,
             column: data.todo.category as ColumnType,
-            stableId: data.todo.id.toString()
+            stableId: data.todo.id.toString(),
           };
 
-          setCards(prev => {
-            // 1. If real card exists, ignore
-            if (prev.some(card => card.id === realCard.id)) return prev;
+          setCards((prev) => {
+            if (prev.some((card) => card.id === realCard.id)) return prev;
 
-            // 2. Check for matching temp card (by title/column)
-            const tempCardIndex = prev.findIndex(card =>
-              card.id.startsWith('temp-') &&
-              card.title === realCard.title &&
-              card.column === realCard.column
+            const tempCardIndex = prev.findIndex(
+              (card) =>
+                card.id.startsWith("temp-") &&
+                card.title === realCard.title &&
+                card.column === realCard.column
             );
 
             if (tempCardIndex !== -1) {
@@ -150,20 +156,24 @@ const Board = () => {
               return updated;
             }
 
-            // 3. New external addition
             return [...prev, realCard];
           });
-
         } else if (data.action === "update") {
-          setCards(prev => prev.map(card =>
-            // Ensure ID comparison is string-to-string
-            card.id === data.todo.id.toString()
-              ? { ...card, title: data.todo.title, column: data.todo.category as ColumnType }
-              : card
-          ));
-
+          setCards((prev) =>
+            prev.map((card) =>
+              card.id === data.todo.id.toString()
+                ? {
+                    ...card,
+                    title: data.todo.title,
+                    column: data.todo.category as ColumnType,
+                  }
+                : card
+            )
+          );
         } else if (data.action === "delete") {
-          setCards(prev => prev.filter(card => card.id !== data.todo.id.toString()));
+          setCards((prev) =>
+            prev.filter((card) => card.id !== data.todo.id.toString())
+          );
         }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
@@ -175,90 +185,101 @@ const Board = () => {
     return () => {
       ws.close();
     };
-  }, [status, token]);
+  }, [isAuthenticated, token]);
 
   const handleCreateTodo = async (title: string, column: ColumnType) => {
     if (!token) return;
 
-    // Generate temporary ID for optimistic update
     tempIdCounter.current += 1;
     const tempId = `temp-${tempIdCounter.current}`;
-    const optimisticCard: CardType = { id: tempId, title, column, stableId: tempId };
+    const optimisticCard: CardType = {
+      id: tempId,
+      title,
+      column,
+      stableId: tempId,
+    };
 
-    // Optimistically add to UI immediately
-    setCards(prev => [...prev, optimisticCard]);
+    setCards((prev) => [...prev, optimisticCard]);
 
     try {
-      const newTodo = await TodoAPI.createTodo({ title, category: column }, token);
-      // Update the temporary card with real data, or remove temp if real card already exists
-      setCards(prev => {
+      const newTodo = await TodoAPI.createTodo(
+        { title, category: column },
+        token
+      );
+      setCards((prev) => {
         const realId = newTodo.id.toString();
-        // If real card already exists (from WebSocket), just remove temp card
-        if (prev.some(card => card.id === realId)) {
-          return prev.filter(card => card.id !== tempId);
+        if (prev.some((card) => card.id === realId)) {
+          return prev.filter((card) => card.id !== tempId);
         } else {
-          // Update temp card to real card
-          return prev.map(card =>
+          return prev.map((card) =>
             card.id === tempId
-              ? { id: realId, title: newTodo.title, column: newTodo.category, stableId: realId }
+              ? {
+                  id: realId,
+                  title: newTodo.title,
+                  column: newTodo.category,
+                  stableId: realId,
+                }
               : card
           );
         }
       });
     } catch (error) {
       console.error(error);
-      // Rollback: remove the optimistic card on failure
-      setCards(prev => prev.filter(card => card.id !== tempId));
+      setCards((prev) => prev.filter((card) => card.id !== tempId));
     }
   };
 
   const handleUpdateTodo = async (id: string, newColumn: ColumnType) => {
     if (!token) return;
 
-    const currentCard = cards.find(card => card.id === id);
+    const currentCard = cards.find((card) => card.id === id);
     if (!currentCard) return;
 
-    // Store original state for rollback
     const originalColumn = currentCard.column;
 
-    // Optimistically update UI immediately
-    setCards(prev => prev.map(card => card.id === id ? { ...card, column: newColumn } : card));
+    setCards((prev) =>
+      prev.map((card) => (card.id === id ? { ...card, column: newColumn } : card))
+    );
 
     try {
       const todoId = parseInt(id);
-      await TodoAPI.updateTodo(todoId, {
-        id: todoId,
-        title: currentCard.title,
-        category: newColumn
-      }, token);
+      await TodoAPI.updateTodo(
+        todoId,
+        {
+          id: todoId,
+          title: currentCard.title,
+          category: newColumn,
+        },
+        token
+      );
     } catch (error) {
       console.error(error);
-      // Rollback: revert to original column on failure
-      setCards(prev => prev.map(card => card.id === id ? { ...card, column: originalColumn } : card));
+      setCards((prev) =>
+        prev.map((card) =>
+          card.id === id ? { ...card, column: originalColumn } : card
+        )
+      );
     }
   };
 
   const handleDeleteTodo = async (id: string) => {
     if (!token) return;
 
-    // Store the card for potential rollback
-    const cardToDelete = cards.find(card => card.id === id);
+    const cardToDelete = cards.find((card) => card.id === id);
     if (!cardToDelete) return;
 
-    // Optimistically remove from UI immediately
-    setCards(prev => prev.filter(card => card.id !== id));
+    setCards((prev) => prev.filter((card) => card.id !== id));
 
     try {
       await TodoAPI.deleteTodo(parseInt(id), token);
     } catch (error) {
       console.error(error);
-      // Rollback: add the card back on failure
-      setCards(prev => [...prev, cardToDelete]);
+      setCards((prev) => [...prev, cardToDelete]);
       toast.error("Failed to delete todo. Please try again.");
     }
   };
 
-  if (status === "loading" || loading) return <BoardSkeleton />;
+  if (isPending || loading) return <BoardSkeleton />;
   return (
     <div className="w-full py-4">
       <div className="w-full flex flex-col gap-6 md:grid md:grid-cols-2 xl:flex xl:flex-row xl:items-start min-h-75 xl:overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
@@ -303,22 +324,35 @@ const Board = () => {
           onDeleteTodo={handleDeleteTodo}
         />
 
-        {/* Desktop & Tablet Burn Barrel */}
         <div className="hidden md:block md:col-span-2 xl:col-auto h-auto">
           <BurnBarrel setCards={setCards} onDeleteTodo={handleDeleteTodo} />
         </div>
 
-        {/* Mobile Burn Barrel */}
         <div className="hidden">
-          <p className="text-center text-xs text-slate-600 mb-2 font-mono uppercase tracking-wider">Drag here to delete</p>
-          <BurnBarrel setCards={setCards} onDeleteTodo={handleDeleteTodo} mobile />
+          <p className="text-center text-xs text-slate-600 mb-2 font-mono uppercase tracking-wider">
+            Drag here to delete
+          </p>
+          <BurnBarrel
+            setCards={setCards}
+            onDeleteTodo={handleDeleteTodo}
+            mobile
+          />
         </div>
       </div>
     </div>
   );
 };
 
-const Column = ({ title, headingColor, cards, column, setCards, onUpdateTodo, onCreateTodo, onDeleteTodo }: ColumnProps) => {
+const Column = ({
+  title,
+  headingColor,
+  cards,
+  column,
+  setCards,
+  onUpdateTodo,
+  onCreateTodo,
+  onDeleteTodo,
+}: ColumnProps) => {
   const [active, setActive] = useState(false);
 
   const handleDragStart = (e: DragEvent, card: CardType) => {
@@ -338,10 +372,9 @@ const Column = ({ title, headingColor, cards, column, setCards, onUpdateTodo, on
       let copy = [...cards];
       const cardToTransfer = copy.find((c) => c.id === cardId);
       if (!cardToTransfer) return;
-      // Update the column on the backend
+
       onUpdateTodo(cardId, column);
 
-      // Update the local state
       copy = copy.filter((c) => c.id !== cardId);
       const moveToBack = before === "-1";
       if (moveToBack) {
@@ -363,7 +396,9 @@ const Column = ({ title, headingColor, cards, column, setCards, onUpdateTodo, on
 
   const clearHighlights = (els?: HTMLElement[]) => {
     const indicators = els || getIndicators();
-    indicators.forEach((i) => { i.style.opacity = "0"; });
+    indicators.forEach((i) => {
+      i.style.opacity = "0";
+    });
   };
 
   const highlightIndicator = (e: DragEvent) => {
@@ -385,13 +420,20 @@ const Column = ({ title, headingColor, cards, column, setCards, onUpdateTodo, on
           return closest;
         }
       },
-      { offset: Number.NEGATIVE_INFINITY, element: indicators[indicators.length - 1] }
+      {
+        offset: Number.NEGATIVE_INFINITY,
+        element: indicators[indicators.length - 1],
+      }
     );
     return el;
   };
 
   const getIndicators = () => {
-    return Array.from(document.querySelectorAll(`[data-column="${column}"]`) as unknown as HTMLElement[]);
+    return Array.from(
+      document.querySelectorAll(
+        `[data-column="${column}"]`
+      ) as unknown as HTMLElement[]
+    );
   };
 
   const handleDragLeave = () => {
@@ -413,20 +455,38 @@ const Column = ({ title, headingColor, cards, column, setCards, onUpdateTodo, on
         onDrop={handleDragEnd}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
-        className={`h-full min-h-37.5 w-full rounded-xl transition-colors ${active ? "bg-slate-800/50" : "bg-transparent"
-          }`}
+        className={`h-full min-h-37.5 w-full rounded-xl transition-colors ${
+          active ? "bg-slate-800/50" : "bg-transparent"
+        }`}
       >
         {filteredCards.map((c) => (
-          <Card key={c.stableId} {...c} handleDragStart={handleDragStart} onDeleteTodo={onDeleteTodo} />
+          <Card
+            key={c.stableId}
+            {...c}
+            handleDragStart={handleDragStart}
+            onDeleteTodo={onDeleteTodo}
+          />
         ))}
         <DropIndicator beforeId={null} column={column} />
-        <AddCard key={column} column={column} setCards={setCards} onCreateTodo={onCreateTodo} />
+        <AddCard
+          key={column}
+          column={column}
+          setCards={setCards}
+          onCreateTodo={onCreateTodo}
+        />
       </div>
     </div>
   );
 };
 
-const Card = ({ title, id, column, stableId, handleDragStart, onDeleteTodo }: CardProps) => {
+const Card = ({
+  title,
+  id,
+  column,
+  stableId,
+  handleDragStart,
+  onDeleteTodo,
+}: CardProps) => {
   return (
     <>
       <DropIndicator beforeId={id} column={column} />
@@ -434,7 +494,9 @@ const Card = ({ title, id, column, stableId, handleDragStart, onDeleteTodo }: Ca
         layout
         layoutId={stableId}
         draggable="true"
-        onDragStart={(e) => handleDragStart(e as any, { title, id, column, stableId })}
+        onDragStart={(e) =>
+          handleDragStart(e as any, { title, id, column, stableId })
+        }
         className="relative cursor-grab rounded-lg border border-slate-700 bg-slate-800 p-3 active:cursor-grabbing shadow-sm hover:border-indigo-500/50 transition-colors"
       >
         <p className="text-sm text-slate-100">{title}</p>
@@ -459,7 +521,15 @@ const DropIndicator = ({ beforeId, column }: DropIndicatorProps) => {
   );
 };
 
-const BurnBarrel = ({ setCards, onDeleteTodo, mobile = false }: { setCards: Dispatch<SetStateAction<CardType[]>>; onDeleteTodo: (id: string) => void; mobile?: boolean; }) => {
+const BurnBarrel = ({
+  setCards,
+  onDeleteTodo,
+  mobile = false,
+}: {
+  setCards: Dispatch<SetStateAction<CardType[]>>;
+  onDeleteTodo: (id: string) => void;
+  mobile?: boolean;
+}) => {
   const [active, setActive] = useState(false);
 
   const handleDragOver = (e: DragEvent) => {
@@ -471,7 +541,6 @@ const BurnBarrel = ({ setCards, onDeleteTodo, mobile = false }: { setCards: Disp
 
   const handleDragEnd = (e: DragEvent) => {
     const cardId = e.dataTransfer.getData("cardId");
-    // Delete from backend
     onDeleteTodo(cardId);
     setActive(false);
   };
@@ -482,25 +551,36 @@ const BurnBarrel = ({ setCards, onDeleteTodo, mobile = false }: { setCards: Disp
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       className={`grid place-content-center rounded-xl border-2 border-dashed transition-all shrink-0 
-      ${active
+      ${
+        active
           ? "border-red-500 bg-red-500/10 text-red-500 scale-105"
           : "border-slate-800 bg-slate-900/20 text-slate-600 hover:border-slate-700 hover:text-slate-500"
-        }
-      ${mobile
-          ? "h-24 w-full"
-          : "h-32 md:h-36 xl:h-50 w-full xl:w-56 xl:mt-10"
-        }
+      }
+      ${
+        mobile ? "h-24 w-full" : "h-32 md:h-36 xl:h-50 w-full xl:w-56 xl:mt-10"
+      }
       `}
     >
-      {active ? <Flame className="animate-bounce" size={mobile ? 24 : 32} /> : <Trash2 size={mobile ? 20 : 24} />}
+      {active ? (
+        <Flame className="animate-bounce" size={mobile ? 24 : 32} />
+      ) : (
+        <Trash2 size={mobile ? 20 : 24} />
+      )}
     </div>
   );
 };
 
-const AddCard = ({ column, setCards, onCreateTodo }: { column: ColumnType; setCards: Dispatch<SetStateAction<CardType[]>>; onCreateTodo: (title: string, column: ColumnType) => void }) => {
+const AddCard = ({
+  column,
+  setCards,
+  onCreateTodo,
+}: {
+  column: ColumnType;
+  setCards: Dispatch<SetStateAction<CardType[]>>;
+  onCreateTodo: (title: string, column: ColumnType) => void;
+}) => {
   const [text, setText] = useState("");
   const [adding, setAdding] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -508,21 +588,19 @@ const AddCard = ({ column, setCards, onCreateTodo }: { column: ColumnType; setCa
 
     const taskText = text.trim();
     setText("");
-    setAdding(false); // Close form immediately
+    setAdding(false);
 
     try {
-      // Create todo via API
       await onCreateTodo(taskText, column);
     } catch (error) {
       console.error(error);
-      // Re-open form on error so user can try again
       setAdding(true);
       setText(taskText);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.ctrlKey && e.key === 'Enter') {
+    if (e.ctrlKey && e.key === "Enter") {
       e.preventDefault();
       handleSubmit(e as any);
     }
@@ -542,8 +620,16 @@ const AddCard = ({ column, setCards, onCreateTodo }: { column: ColumnType; setCa
           <div className="mt-1 flex items-center justify-between">
             <span className="text-xs text-slate-400">Ctrl+Enter (submit)</span>
             <div className="flex items-center gap-1.5">
-              <button onClick={() => setAdding(false)} className="px-3 py-1.5 text-xs text-slate-400 hover:text-slate-50">Cancel</button>
-              <button type="submit" className="flex items-center gap-1.5 rounded bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500">
+              <button
+                onClick={() => setAdding(false)}
+                className="px-3 py-1.5 text-xs text-slate-400 hover:text-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex items-center gap-1.5 rounded bg-indigo-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-indigo-500"
+              >
                 <span>Add</span>
                 <Plus size={14} />
               </button>
@@ -551,7 +637,10 @@ const AddCard = ({ column, setCards, onCreateTodo }: { column: ColumnType; setCa
           </div>
         </form>
       ) : (
-        <button onClick={() => setAdding(true)} className="flex w-full items-center gap-1.5 px-3 py-1.5 text-xs text-slate-500 hover:text-slate-300">
+        <button
+          onClick={() => setAdding(true)}
+          className="flex w-full items-center gap-1.5 px-3 py-1.5 text-xs text-slate-500 hover:text-slate-300"
+        >
           <span>Add card</span>
           <Plus size={14} />
         </button>
@@ -559,4 +648,3 @@ const AddCard = ({ column, setCards, onCreateTodo }: { column: ColumnType; setCa
     </>
   );
 };
-

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
-import { useSession, signOut } from "next-auth/react";
+import { useSession, signOut } from "@/lib/auth-client";
 import { LogOut, LayoutDashboard, Menu, X, ChevronRight } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function Navbar() {
-  const { data: session, status } = useSession();
+  const { data: sessionData, isPending } = useSession();
+  const user = sessionData?.user;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const getInitials = (name?: string | null, email?: string | null) => {
@@ -34,28 +35,32 @@ export default function Navbar() {
     { name: "Start Managing", href: "/todo" },
   ];
 
-  // 👇 Smooth scroll handler (Windows-friendly)
-const handleSmoothScroll = (
-  e: React.MouseEvent<HTMLAnchorElement>,
-  href: string
-) => {
-  if (!href.startsWith("/#")) return;
+  const handleSmoothScroll = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href: string
+  ) => {
+    if (!href.startsWith("/#")) return;
+    if (window.location.pathname !== "/") return;
 
-  // 👇 only smooth-scroll if we're already on home page
-  if (window.location.pathname !== "/") return;
+    e.preventDefault();
+    const id = href.replace("/#", "");
+    const el = document.getElementById(id);
 
-  e.preventDefault();
+    if (el) {
+      const y = el.getBoundingClientRect().top + window.pageYOffset - 64;
+      window.scrollTo({ top: y, behavior: "smooth" });
+    }
+  };
 
-  const id = href.replace("/#", "");
-  const el = document.getElementById(id);
-
-  if (el) {
-    const y =
-      el.getBoundingClientRect().top + window.pageYOffset - 64;
-    window.scrollTo({ top: y, behavior: "smooth" });
-  }
-};
-
+  const handleSignOut = async () => {
+    await signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          window.location.href = "/";
+        },
+      },
+    });
+  };
 
   return (
     <>
@@ -100,18 +105,18 @@ const handleSmoothScroll = (
           <div className="flex items-center gap-3">
             {/* Auth Logic */}
             <div className="flex items-center gap-4">
-              {status === "loading" ? (
+              {isPending ? (
                 <div className="h-8 w-8 animate-pulse rounded-full bg-violet-900/20 border border-violet-500/20" />
-              ) : session?.user ? (
+              ) : user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Avatar className="h-9 w-9 cursor-pointer border border-violet-500/20 hover:border-violet-500/50 transition-colors">
                       <AvatarImage
-                        src={session.user.image || undefined}
-                        alt={session.user.name || "User"}
+                        src={user.image || undefined}
+                        alt={user.name || "User"}
                       />
                       <AvatarFallback className="bg-violet-600 text-white">
-                        {getInitials(session.user.name, session.user.email)}
+                        {getInitials(user.name, user.email)}
                       </AvatarFallback>
                     </Avatar>
                   </DropdownMenuTrigger>
@@ -122,10 +127,10 @@ const handleSmoothScroll = (
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none text-white">
-                          {session.user.name || "User"}
+                          {user.name || "User"}
                         </p>
                         <p className="text-xs leading-none text-slate-400">
-                          {session.user.email}
+                          {user.email}
                         </p>
                       </div>
                     </DropdownMenuLabel>
@@ -137,7 +142,7 @@ const handleSmoothScroll = (
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => signOut({ callbackUrl: "/" })}
+                      onClick={handleSignOut}
                       className="focus:bg-red-500/10 focus:text-red-400 cursor-pointer text-red-500"
                     >
                       <LogOut className="mr-2 h-4 w-4" />

@@ -3,11 +3,11 @@
 import React, { useState, useRef, useEffect, createContext, useContext } from "react";
 import clsx from "clsx";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { X, Maximize2, Minimize2, RefreshCw, Send, Lock } from "lucide-react";
 import { marked } from "marked";
-import TodoAPI, { ChatMessage } from "../../services/api"; 
-import { useSession } from "next-auth/react";
+import TodoAPI, { ChatMessage } from "../../services/api";
+import { useSession } from "@/lib/auth-client";
 
 // --- 1. Context Setup ---
 interface ChatContextType {
@@ -50,11 +50,11 @@ function WidgetContent() {
   const [isLarge, setIsLarge] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { data: session, status } = useSession();
-  const token = (session as any)?.accessToken; 
+  const { data: sessionData, isPending } = useSession();
+  const token = sessionData?.session?.token;
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const isAuthenticated = status === "authenticated" && !!token;
+  const isAuthenticated = !isPending && !!sessionData?.session && !!token;
 
   const suggestedQuestions = [
     "Prioritize my task list for today.",
@@ -72,7 +72,7 @@ function WidgetContent() {
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" }); // Smooth JS scroll
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -81,7 +81,7 @@ function WidgetContent() {
   }, [messages, isOpen, streamingReply]);
 
   const sendMessage = async (messageText?: string) => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !token) return;
     const messageToSend = messageText || input.trim();
     if (!messageToSend || isLoading) return;
 
@@ -172,7 +172,7 @@ function WidgetContent() {
                 <div>
                   <h2 className="text-sm font-bold tracking-wide text-white">TaskGenie AI</h2>
                   <div className="flex items-center gap-1.5 text-[10px] font-bold tracking-wider text-slate-400">
-                    <span className={clsx("h-1.5 w-1.5 rounded-full shadow-[0_0_5px]", 
+                    <span className={clsx("h-1.5 w-1.5 rounded-full shadow-[0_0_5px]",
                       !isAuthenticated ? "bg-red-500 shadow-red-500" : (isLoading ? "bg-violet-400 animate-pulse shadow-violet-400" : "bg-emerald-500 shadow-emerald-500"))} />
                     {!isAuthenticated ? "LOCKED" : (isLoading ? "THINKING..." : "ONLINE")}
                   </div>

@@ -3,12 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signUp, signIn } from "@/lib/auth-client";
 import { Loader2, TriangleAlert, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-// Import the server action we just updated
-import { registerUser } from "@/actions/register";
 
 // UI Components
 import { Input } from "@/components/ui/input";
@@ -31,9 +28,8 @@ const SignUpCard = () => {
 
   // Loading States
   const [loading, setLoading] = useState(false);
-  const [loadingGithub, setLoadingGithub] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
-  const [isPending, setIsPending] = useState(false); // Replaces mutation.isPending
+  const [isPending, setIsPending] = useState(false);
 
   // Form Data States
   const [email, setEmail] = useState("");
@@ -52,21 +48,22 @@ const SignUpCard = () => {
   const handleTabChange = (value: string) => {
     if (value === "signin") {
       setLoading(true);
-      router.push("/login"); // Changed from /sign-in to /login
+      router.push("/login");
     }
   };
 
-  const onProviderSignUp = (provider: "github" | "google") => {
+  const onProviderSignUp = async (provider: "google") => {
     setLoading(true);
-    setLoadingGithub(provider === "github");
-    setLoadingGoogle(provider === "google");
-    signIn(provider, { callbackUrl: "/" });
+    setLoadingGoogle(true);
+    await signIn.social({
+      provider,
+      callbackURL: "/",
+    });
   };
 
   const handleEmailContinue = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    // Simple regex for email validation
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setValidationError("Invalid email address");
       return;
@@ -94,39 +91,26 @@ const SignUpCard = () => {
 
     const fullName = `${firstName} ${lastName}`.trim();
 
-    // Create FormData to send to Server Action
-    const formData = new FormData();
-    formData.append("name", fullName);
-    formData.append("email", email);
-    formData.append("password", password);
-
-    // Call Server Action
-    const result = await registerUser(formData);
-
-    if (result.error) {
-      setValidationError(result.error);
+    try {
+      await signUp.email(
+        {
+          email,
+          password,
+          name: fullName,
+        },
+        {
+          onSuccess: () => {
+            window.location.href = "/";
+          },
+          onError: (ctx) => {
+            setValidationError(ctx.error.message || "Failed to create account");
+            setIsPending(false);
+          },
+        }
+      );
+    } catch (err: any) {
+      setValidationError(err?.message || "Registration failed");
       setIsPending(false);
-    } else {
-      // Success: Auto Login
-      console.log("Registration successful, attempting auto-login...");
-      setLoading(true);
-      const result = await signIn("credentials", {
-        email,
-        password,
-        callbackUrl: "/",
-        redirect: false, // Don't redirect automatically
-      });
-      console.log("SignIn result:", result);
-
-      if (result?.ok) {
-        console.log("SignIn successful, redirecting...");
-        // Force a page reload to ensure session is updated
-        window.location.href = "/";
-      } else {
-        console.log("SignIn failed:", result?.error);
-        setValidationError("Account created but login failed. Please try signing in manually.");
-        setLoading(false);
-      }
     }
   };
 
@@ -136,11 +120,7 @@ const SignUpCard = () => {
       <div className="hidden lg:flex lg:w-1/2 bg-slate-900 flex-col justify-between p-12 fixed left-0 top-0 h-screen overflow-hidden z-10">
         <div className="flex flex-col items-center justify-center flex-1">
           <div className="text-center space-y-8">
-            {/* Logo Placeholder */}
-            <Link
-              href="/"
-              rel="noopener noreferrer"
-            >
+            <Link href="/" rel="noopener noreferrer">
               <Image
                 src="/logo.png"
                 alt="Logo"
@@ -167,7 +147,7 @@ const SignUpCard = () => {
         <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-y-auto">
           <div className="w-full max-w-lg space-y-6">
             {/* Mobile Logo */}
-              <Link
+            <Link
               href="/"
               rel="noopener noreferrer"
               className="lg:hidden block"
@@ -237,10 +217,16 @@ const SignUpCard = () => {
                     className="w-full mt-4"
                   >
                     <TabsList className="grid w-full grid-cols-2 h-10 bg-slate-800">
-                      <TabsTrigger value="signin" className="h-8 text-sm text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700">
+                      <TabsTrigger
+                        value="signin"
+                        className="h-8 text-sm text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700"
+                      >
                         Sign In
                       </TabsTrigger>
-                      <TabsTrigger value="signup" className="h-8 text-sm text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700">
+                      <TabsTrigger
+                        value="signup"
+                        className="h-8 text-sm text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700"
+                      >
                         Sign Up
                       </TabsTrigger>
                     </TabsList>
@@ -258,7 +244,7 @@ const SignUpCard = () => {
                       className="w-full h-10 sm:h-12 text-base sm:text-lg relative bg-violet-600 border-none text-white hover:text-white hover:bg-violet-500 cursor-pointer"
                       type="button"
                       onClick={() => onProviderSignUp("google")}
-                      disabled={loading || loadingGithub}
+                      disabled={loading}
                     >
                       {loadingGoogle ? (
                         <Loader2 className="mr-2 size-5 animate-spin" />
