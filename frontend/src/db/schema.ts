@@ -59,3 +59,5 @@ export const verification = pgTable("verification", {
 export const users = user;
 export const accounts = account;
 export const sessions = session;
+export const passwordResetTokens = verification;
+

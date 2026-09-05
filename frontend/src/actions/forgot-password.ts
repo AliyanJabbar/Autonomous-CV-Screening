@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { users, passwordResetTokens } from "@/db/schema";
+import { user as userTable, verification } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { sendPasswordResetEmail } from "@/lib/mail";
@@ -14,29 +14,29 @@ export const resetPassword = async (formData: FormData) => {
   }
 
   // 1. Check if user exists
-  const existingUser = await db.query.users.findFirst({
-    where: eq(users.email, email),
+  const existingUser = await db.query.user.findFirst({
+    where: eq(userTable.email, email),
   });
 
   if (!existingUser) {
-    // Security: Don't reveal if email exists or not
     return { error: "your email does not exist on this website." };
   }
 
   // 2. Generate Token
   const token = uuidv4();
-  const expires = new Date(new Date().getTime() + 3600 * 1000); // 1 hour from now
+  const expiresAt = new Date(Date.now() + 3600 * 1000); // 1 hour from now
 
-  // 3. Delete existing tokens for this email (optional cleanup)
+  // 3. Delete existing verification tokens for this identifier (email)
   await db
-    .delete(passwordResetTokens)
-    .where(eq(passwordResetTokens.email, email));
+    .delete(verification)
+    .where(eq(verification.identifier, email));
 
-  // 4. Insert new token
-  await db.insert(passwordResetTokens).values({
-    email,
-    token,
-    expires,
+  // 4. Insert new verification token
+  await db.insert(verification).values({
+    id: uuidv4(),
+    identifier: email,
+    value: token,
+    expiresAt,
   });
 
   // 5. Send Email
@@ -47,3 +47,4 @@ export const resetPassword = async (formData: FormData) => {
     return { error: "Failed to send email currently" };
   }
 };
+

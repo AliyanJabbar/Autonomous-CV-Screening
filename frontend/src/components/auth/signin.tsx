@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useState, useEffect } from "react";
 import { signIn } from "@/lib/auth-client";
-import { Loader2, TriangleAlert, Eye, EyeOff } from "lucide-react";
+import { Loader2, TriangleAlert, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { useSearchParams, useRouter } from "next/navigation";
 
 // UI Components
@@ -101,81 +100,77 @@ const SignIn = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row mt-10 bg-slate-950 text-slate-50">
-      {/* Left Side - Logo and Terms */}
-      <div className="hidden lg:flex lg:w-1/2 bg-slate-900 flex-col justify-between p-12 fixed left-0 top-0 h-screen overflow-hidden z-10">
-        <div className="flex flex-col items-center justify-center flex-1">
-          <div className="text-center space-y-8">
-            <Link href="/" rel="noopener noreferrer">
-              <Image
-                src="/logo.png"
-                alt="Logo"
-                width={100}
-                height={100}
-                className="mx-auto my-10"
-              />
-            </Link>
-            <div className="space-y-4">
-              <h1 className="text-4xl font-bold text-white">
-                Welcome to TaskGenie
-              </h1>
-              <p className="text-lg text-slate-400 max-w-md">
-                Manage your tasks efficiently with our intuitive todo application.
-                Sign in to get started on organizing your productivity.
-              </p>
-            </div>
+    <div className="min-h-screen flex flex-col lg:flex-row bg-[#faf9f5] text-[#141413]">
+      {/* Left Side - Brand & Editorial Mission */}
+      <div className="hidden lg:flex lg:w-1/2 bg-[#efe9de] flex-col justify-between p-12 fixed left-0 top-0 h-screen overflow-hidden z-10 border-r border-[#e6dfd8]">
+        <div className="flex flex-col items-start justify-center flex-1 space-y-8 max-w-lg mx-auto">
+          <Link href="/" className="flex items-center gap-2.5">
+            <svg className="w-8 h-8 text-[#cc785c]" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L13.5 9.5L21 11L13.5 12.5L12 20L10.5 12.5L3 11L10.5 9.5L12 2Z" />
+            </svg>
+            <span className="font-serif text-2xl font-medium tracking-tight text-[#141413]">
+              AuraScreening
+            </span>
+          </Link>
+
+          <div className="space-y-4">
+            <h1 className="font-serif text-4xl text-[#141413] tracking-tight font-normal leading-tight">
+              Sign in to your talent evaluation workspace.
+            </h1>
+            <p className="text-base text-[#3d3d3a] leading-relaxed font-sans">
+              Access your autonomous candidate shortlists, semantic matching criteria, and bias-free evaluation reports.
+            </p>
+          </div>
+
+          <div className="pt-6 border-t border-[#e6dfd8] w-full flex items-center gap-2 text-xs font-mono text-[#6c6a64]">
+            <ShieldCheck size={16} className="text-[#5db872]" />
+            <span>SOC2 Type II & EEOC Compliant Infrastructure</span>
           </div>
         </div>
       </div>
 
       {/* Right Side - Sign In Form */}
-      <div className="flex-1 lg:w-1/2 lg:ml-[50%] flex flex-col min-h-screen lg:min-h-0">
-        <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-y-auto">
-          <div className="w-full max-w-lg space-y-2">
-            {/* Mobile Logo */}
-            <Link
-              href="/"
-              rel="noopener noreferrer"
-              className="lg:hidden block"
-            >
-              <Image
-                src="/logo.png"
-                alt="Logo"
-                width={100}
-                height={100}
-                className="mx-auto my-10"
-              />
+      <div className="flex-1 lg:w-1/2 lg:ml-[50%] flex flex-col min-h-screen">
+        <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
+          <div className="w-full max-w-md space-y-6">
+            
+            {/* Mobile Brand Link */}
+            <Link href="/" className="lg:hidden flex items-center gap-2 justify-center mb-6">
+              <svg className="w-6 h-6 text-[#cc785c]" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L13.5 9.5L21 11L13.5 12.5L12 20L10.5 12.5L3 11L10.5 9.5L12 2Z" />
+              </svg>
+              <span className="font-serif text-xl font-medium text-[#141413]">AuraScreening</span>
             </Link>
 
-            <Card className="border-0 shadow-none bg-transparent">
-              <CardHeader className="text-center space-y-0 pb-4">
-                <CardTitle className="text-2xl sm:text-3xl font-bold text-white">
-                  Welcome back to TaskGenie
+            <Card className="border border-[#e6dfd8] shadow-xs bg-[#faf9f5] rounded-xl">
+              <CardHeader className="text-center pb-4 space-y-2">
+                <CardTitle className="font-serif text-2xl font-normal text-[#141413]">
+                  Welcome back
                 </CardTitle>
-                <CardDescription className="text-base sm:text-lg mt-2 text-slate-400">
-                  Sign in with Google or continue with your email
+                <CardDescription className="text-sm text-[#6c6a64] font-sans">
+                  Sign in to continue to your candidate dashboard
                 </CardDescription>
 
                 {/* Tabs */}
-                <div className="flex justify-center w-full">
+                <div className="flex justify-center w-full pt-2">
                   <Tabs
                     defaultValue="signin"
                     value="signin"
                     onValueChange={handleTabChange}
-                    className="w-full mt-4"
+                    className="w-full"
                   >
-                    <TabsList className="grid w-full grid-cols-2 h-10 bg-slate-800">
+                    <TabsList className="grid w-full grid-cols-2 h-9 bg-[#efe9de] rounded-md p-1 border border-[#e6dfd8]">
                       <TabsTrigger
                         value="signin"
-                        className="h-8 text-sm text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700"
+                        className="h-7 text-xs font-semibold text-[#141413] data-[state=active]:bg-[#faf9f5] data-[state=active]:shadow-xs rounded-sm"
                       >
                         Sign In
                       </TabsTrigger>
                       <TabsTrigger
                         value="signup"
-                        className="h-8 text-sm text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700"
+                        className="h-7 text-xs font-semibold text-[#6c6a64] data-[state=active]:bg-[#faf9f5] data-[state=active]:text-[#141413] rounded-sm"
                       >
-                        Sign Up
+                        Create Account
                       </TabsTrigger>
                     </TabsList>
                   </Tabs>
@@ -184,57 +179,53 @@ const SignIn = () => {
                 {/* Alerts/Errors */}
                 {createdMsg && (
                   <div
-                    className="mt-4 rounded-md border border-emerald-200/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300"
+                    className="mt-4 rounded-md border border-[#5db872]/40 bg-[#5db872]/10 px-4 py-2.5 text-xs font-medium text-[#5db872]"
                     role="status"
                   >
-                    Your account has been created. Please sign in.
+                    Account created successfully. Please sign in below.
                   </div>
                 )}
                 {!!errorState && (
-                  <div className="mt-4 bg-red-900/30 p-3 rounded-md flex items-center gap-x-2 text-sm text-red-300">
-                    <TriangleAlert className="size-4" />
+                  <div className="mt-4 bg-[#c64545]/10 border border-[#c64545]/30 p-2.5 rounded-md flex items-center gap-x-2 text-xs text-[#c64545]">
+                    <TriangleAlert className="size-4 shrink-0" />
                     <p>{errorState}</p>
                   </div>
                 )}
               </CardHeader>
 
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pt-0">
                 {/* Google Button */}
                 <Button
                   variant="outline"
-                  className="w-full h-10 sm:h-12 text-base sm:text-lg relative bg-violet-600 border-none text-white hover:text-white hover:bg-violet-500 cursor-pointer"
+                  className="w-full h-10 text-sm font-medium border-[#e6dfd8] bg-[#faf9f5] text-[#141413] hover:bg-[#efe9de] cursor-pointer"
                   type="button"
                   onClick={() => onProviderSignIn("google")}
                   disabled={loading}
                 >
                   {loadingGoogle ? (
-                    <Loader2 className="mr-2 size-5 animate-spin" />
+                    <Loader2 className="mr-2 size-4 animate-spin" />
                   ) : (
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="mr-2 h-6 w-6"
+                      className="mr-2 h-4 w-4"
                       viewBox="0 0 16 16"
                     >
                       <g fill="none" fillRule="evenodd" clipRule="evenodd">
                         <path
                           fill="#f44336"
                           d="M7.209 1.061c.725-.081 1.154-.081 1.933 0a6.57 6.57 0 0 1 3.65 1.82a100 100 0 0 0-1.986 1.93q-1.876-1.59-4.188-.734q-1.696.78-2.362 2.528a78 78 0 0 1-2.148-1.658a.26.26 0 0 0-.16-.027q1.683-3.245 5.26-3.86"
-                          opacity="0.987"
                         />
                         <path
                           fill="#ffc107"
                           d="M1.946 4.92q.085-.013.161.027a78 78 0 0 0 2.148 1.658A7.6 7.6 0 0 0 4.04 7.99q.037.678.215 1.331L2 11.116Q.527 8.038 1.946 4.92"
-                          opacity="0.997"
                         />
                         <path
                           fill="#448aff"
                           d="M12.685 13.29a26 26 0 0 0-2.202-1.74q1.15-.812 1.396-2.228H8.122V6.713q3.25-.027 6.497.055q.616 3.345-1.423 6.032a7 7 0 0 1-.51.49"
-                          opacity="0.999"
                         />
                         <path
                           fill="#43a047"
                           d="M4.255 9.322q1.23 3.057 4.51 2.854a3.94 3.94 0 0 0 1.718-.626q1.148.812 2.202 1.74a6.62 6.62 0 0 1-4.027 1.684a6.4 6.4 0 0 1-1.02 0Q3.82 14.524 2 11.116z"
-                          opacity="0.993"
                         />
                       </g>
                     </svg>
@@ -243,51 +234,45 @@ const SignIn = () => {
                 </Button>
 
                 {/* Divider */}
-                <div className="relative text-center text-sm py-2">
+                <div className="relative text-center text-xs py-1">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-700" />
+                    <div className="w-full border-t border-[#e6dfd8]" />
                   </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-slate-950 px-2 text-slate-400">
-                      Or continue with
+                  <div className="relative flex justify-center text-[11px] uppercase tracking-wider font-mono">
+                    <span className="bg-[#faf9f5] px-2 text-[#6c6a64]">
+                      Or credentials
                     </span>
                   </div>
                 </div>
 
                 {/* Credentials Form */}
                 <form onSubmit={onCredentialSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor="email"
-                      className="text-base sm:text-lg text-slate-300"
-                    >
-                      Email
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email" className="text-xs font-semibold text-[#141413]">
+                      Email Address
                     </Label>
                     <Input
                       id="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email"
+                      placeholder="name@company.com"
                       type="email"
                       disabled={loading}
-                      className="h-10 sm:h-12 text-base sm:text-lg bg-slate-800 border-slate-700 text-white"
+                      className="h-10 text-sm bg-[#faf9f5] border-[#e6dfd8] text-[#141413] focus:border-[#cc785c]"
                       required
                     />
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <Label
-                        htmlFor="password"
-                        className="text-base sm:text-lg text-slate-300"
-                      >
+                      <Label htmlFor="password" className="text-xs font-semibold text-[#141413]">
                         Password
                       </Label>
                       <Link
                         href="/forgot-password"
-                        className="text-sm sm:text-base font-medium text-violet-500 hover:text-violet-400 transition-colors"
+                        className="text-xs text-[#cc785c] hover:underline"
                       >
-                        Forgot password?
+                        Forgot?
                       </Link>
                     </div>
                     <div className="relative">
@@ -295,74 +280,41 @@ const SignIn = () => {
                         id="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter your password"
+                        placeholder="••••••••"
                         type={showPw ? "text" : "password"}
                         disabled={loading}
-                        className="h-10 sm:h-12 text-base sm:text-lg pr-12 bg-slate-800 border-slate-700 text-white"
+                        className="h-10 text-sm pr-10 bg-[#faf9f5] border-[#e6dfd8] text-[#141413] focus:border-[#cc785c]"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowPw((v) => !v)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-200 transition-colors"
-                        aria-label={showPw ? "Hide password" : "Show password"}
-                        tabIndex={-1}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6c6a64] hover:text-[#141413]"
                         disabled={loading}
                       >
-                        {showPw ? <EyeOff size={20} /> : <Eye size={20} />}
+                        {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     </div>
                   </div>
 
-                  <div className="text-center text-xs text-slate-400">
-                    <p className="text-balance">
-                      By using this service, you agree to our{" "}
-                      <Link
-                        href="/terms"
-                        className="font-medium text-violet-500 underline underline-offset-4 hover:text-violet-400 transition-colors"
-                      >
-                        Terms of Service
-                      </Link>{" "}
-                      and{" "}
-                      <Link
-                        href="/privacy-policy"
-                        className="font-medium text-violet-500 underline underline-offset-4 hover:text-violet-400 transition-colors"
-                      >
-                        Privacy Policy
-                      </Link>
-                      .
-                    </p>
-                  </div>
-
                   <Button
                     type="submit"
-                    className="w-full h-10 sm:h-12 text-base sm:text-lg bg-violet-600 border-none text-white hover:text-white hover:bg-violet-500 cursor-pointer"
+                    className="w-full h-10 text-sm font-semibold bg-[#cc785c] text-white hover:bg-[#a9583e] cursor-pointer"
                     disabled={loading}
-                    size="lg"
                   >
                     {loadingLogin ? (
                       <>
-                        <Loader2 className="mr-2 size-5 animate-spin" />
+                        <Loader2 className="mr-2 size-4 animate-spin" />
                         Signing in...
                       </>
                     ) : (
                       "Sign In"
                     )}
                   </Button>
-
-                  <div className="text-center text-sm sm:text-base text-slate-400">
-                    Don&apos;t have an account?{" "}
-                    <Link
-                      href="/register"
-                      onClick={() => setLoading(true)}
-                      className="font-bold text-violet-500 hover:text-violet-400 transition-colors"
-                    >
-                      Sign up
-                    </Link>
-                  </div>
                 </form>
               </CardContent>
             </Card>
+
           </div>
         </div>
       </div>
@@ -371,3 +323,4 @@ const SignIn = () => {
 };
 
 export default SignIn;
+
