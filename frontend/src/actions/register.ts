@@ -2,8 +2,9 @@
 
 import bcrypt from "bcryptjs";
 import { db } from "@/db";
-import { users } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { user as userTable, account as accountTable } from "@/db/schema";
+import { eq, and } from "drizzle-orm";
+import { v4 as uuidv4 } from "uuid";
 
 export async function registerUser(formData: FormData) {
   const name = formData.get("name") as string;
@@ -16,30 +17,41 @@ export async function registerUser(formData: FormData) {
 
   try {
     // Check if user exists
-    const existingUser = await db
-      .select()
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1); // Optimizing query
+    const existingUser = await db.query.user.findFirst({
+      where: eq(userTable.email, email),
+    });
 
-    if (existingUser.length > 0) {
-      const user = existingUser[0];
+    if (existingUser) {
+      const credentialAccount = await db.query.account.findFirst({
+        where: and(
+          eq(accountTable.userId, existingUser.id),
+          eq(accountTable.providerId, "credential")
+        ),
+      });
 
-      // If user exists but has NO password, they created the account via Google
-      if (!user.password) {
+      if (!credentialAccount || !credentialAccount.password) {
         return { error: "Account exists. Please sign in with Google." };
       }
 
-      // If user exists AND has a password, it's a standard "Email taken" error
       return { error: "Email already in use" };
     }
 
-    // Hash and Insert
+    // Hash and Insert into user and account tables (Better Auth format)
+    const userId = uuidv4();
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await db.insert(users).values({
+    await db.insert(userTable).values({
+      id: userId,
       name,
       email,
+      emailVerified: false,
+    });
+
+    await db.insert(accountTable).values({
+      id: uuidv4(),
+      userId,
+      accountId: userId,
+      providerId: "credential",
       password: hashedPassword,
     });
 
@@ -49,3 +61,4 @@ export async function registerUser(formData: FormData) {
     return { error: "Failed to create account" };
   }
 }
+

@@ -2,193 +2,227 @@
 
 import { motion } from "motion/react";
 import {
-  Layout,
+  FileCheck,
+  Cpu,
+  Sparkles,
+  Users,
+  Sliders,
+  Shield,
+  Layers,
   CheckCircle2,
-  Circle,
-  Inbox,
-  Calendar,
-  Star,
-  Hash,
 } from "lucide-react";
 
 export default function ProductMockup() {
-  const sampleTasks = [
+  const candidates = [
     {
-      title: "Fix the navigation bug",
-      status: "done",
-      color: "text-emerald-500",
+      name: "Elena Rostova",
+      role: "Senior Staff Machine Learning Engineer",
+      experience: "10 yrs exp • ex-DeepMind • PhD Tech University",
+      matchScore: "98.2%",
+      skills: ["PyTorch", "Distributed Training", "CUDA", "LLM Fine-Tuning"],
+      status: "Shortlisted",
     },
     {
-      title: "Prepare hackathon presentation",
-      status: "todo",
-      color: "text-slate-600",
-    },
-    { title: "Review pull requests", status: "todo", color: "text-slate-600" },
-    {
-      title: "Update documentation for AI module",
-      status: "todo",
-      color: "text-slate-600",
+      name: "Marcus Vance",
+      role: "Principal Infrastructure Architect",
+      experience: "14 yrs exp • ex-[#Anthropic] • MS MIT",
+      matchScore: "95.6%",
+      skills: ["Kubernetes", "Rust", "Distributed Systems", "GPU Clusters"],
+      status: "Shortlisted",
     },
     {
-      title: "Call with the design team",
-      status: "todo",
-      color: "text-slate-600",
+      name: "Priya Sharma",
+      role: "Lead NLP Researcher & Algorithm Specialist",
+      experience: "8 yrs exp • Carnegie Mellon MS",
+      matchScore: "92.1%",
+      skills: ["Transformers", "RAG Systems", "Vector Databases", "Python"],
+      status: "Under Review",
     },
   ];
 
   return (
-    <section id="demo" className="container mx-auto px-4 py-24">
-      {/* 1. External Text Section */}
-      <div className="mb-16 text-center">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
+    <section id="pipeline" className="py-24 bg-[#faf9f5]">
+      <div className="container mx-auto px-6 max-w-6xl">
+        {/* Section Header */}
+        <div className="mb-16 text-center space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#efe9de] border border-[#e6dfd8]">
+            <Sparkles size={14} className="text-[#cc785c]" />
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#141413]">
+              AI Screening Pipeline
+            </span>
+          </div>
+
+          <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl text-[#141413] tracking-tight font-normal">
+            Inspect live candidate evaluation in real-time.
+          </h2>
+
+          <p className="text-base sm:text-lg text-[#3d3d3a] max-w-2xl mx-auto font-sans leading-relaxed">
+            Observe how AuraScreening extracts candidate experience, checks semantic alignment against job specifications, and generates transparent evaluation logs.
+          </p>
+        </div>
+
+        {/* Dark Navy Product Surface Mockup */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-3xl font-bold tracking-tight text-white md:text-5xl"
+          transition={{ duration: 0.6 }}
+          className="rounded-2xl bg-[#181715] p-4 sm:p-8 text-[#faf9f5] border border-[#252320] shadow-2xl space-y-6"
         >
-          Manage your tasks efficiently with{" "}
-          <span className="text-violet-400">TaskGenie</span>
-        </motion.h2>
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.1 }}
-          className="mx-auto mt-4 max-w-2xl text-slate-400 md:text-lg"
-        >
-          Everything you need to go from "to-do" to "done." Experience a
-          workspace designed for speed and clarity.
-        </motion.p>
-      </div>
-
-      {/* 2. Responsive Mockup Container */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        className="relative mx-auto max-w-5xl"
-      >
-        {/* Glow Effect */}
-        <div className="absolute -inset-1 rounded-[1.5rem] md:rounded-[2.5rem] bg-linear-to-r from-violet-600 to-indigo-600 opacity-20 blur-2xl" />
-
-        <div className="relative rounded-[1.5rem] md:rounded-[2rem] border border-slate-800 bg-slate-950 p-2 md:p-4 shadow-2xl">
-          <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
-            {/* Header / Search Bar */}
-            <div className="flex h-12 w-full items-center justify-between bg-slate-800/50 px-4">
+          {/* Top Control Chrome */}
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#252320] pb-5">
+            <div className="flex items-center gap-3">
               <div className="flex gap-1.5">
-                <div className="h-3 w-3 rounded-full bg-red-500/50" />
-                <div className="h-3 w-3 rounded-full bg-amber-500/50" />
-                <div className="h-3 w-3 rounded-full bg-emerald-500/50" />
+                <div className="w-3 h-3 rounded-full bg-[#c64545]" />
+                <div className="w-3 h-3 rounded-full bg-[#e8a55a]" />
+                <div className="w-3 h-3 rounded-full bg-[#5db8a6]" />
               </div>
-              <div className="flex items-center gap-2">
-                <div className="h-6 w-32 md:w-64 rounded-full bg-slate-900/80 border border-slate-700 px-3 flex items-center">
-                  <div className="h-2 w-2 rounded-full bg-slate-700" />
-                </div>
+              <div className="h-4 w-px bg-[#252320]" />
+              <div className="flex items-center gap-2 text-xs font-mono text-[#a09d96]">
+                <FileCheck size={14} className="text-[#cc785c]" />
+                <span>Job Requirement: Senior AI & Infrastructure Architect</span>
               </div>
-              <div className="h-6 w-6 rounded-full bg-slate-700" />
             </div>
 
-            {/* Application Inner Grid */}
-            <div className="grid grid-cols-12 min-h-87.5 md:h-125">
-              {/* Sidebar: Navigation text added */}
-              <div className="hidden md:flex col-span-3 border-r border-slate-800 p-4 flex-col gap-6">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 text-violet-400">
-                    <Inbox size={18} />
-                    <span className="text-sm font-medium">Inbox</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-slate-400 hover:text-white transition-colors cursor-pointer">
-                    <Calendar size={18} />
-                    <span className="text-sm font-medium">Today</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-slate-400 hover:text-white transition-colors cursor-pointer">
-                    <Star size={18} />
-                    <span className="text-sm font-medium">Important</span>
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2">
-                    Projects
-                  </span>
-                  <div className="mt-2 space-y-2">
-                    <div className="flex items-center gap-3 text-slate-400 px-2 py-1 rounded-md hover:bg-slate-800">
-                      <Hash size={14} />{" "}
-                      <span className="text-xs">Hackathon</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-slate-400 px-2 py-1 rounded-md hover:bg-slate-800">
-                      <Hash size={14} />{" "}
-                      <span className="text-xs">Personal</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Main Content: Real Task text added */}
-              <div className="col-span-12 md:col-span-9 p-6 md:p-10">
-                <div className="flex items-center justify-between mb-10">
-                  <div className="space-y-1">
-                    <h3 className="text-xl md:text-2xl font-bold text-white">
-                      All Tasks
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      You have 4 tasks remaining for today.
-                    </p>
-                  </div>
-                  <button className="h-10 w-10 rounded-full bg-violet-600 hover:bg-violet-500 transition-all flex items-center justify-center text-white shadow-[0_0_20px_rgba(139,92,246,0.4)]">
-                    <span className="text-2xl">+</span>
-                  </button>
-                </div>
-
-                {/* Animated Task List */}
-                <div className="space-y-3">
-                  {sampleTasks.map((task, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -10 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.1 }}
-                      className="group flex items-center gap-4 h-16 w-full rounded-2xl bg-slate-800/30 border border-slate-700/50 px-5 hover:bg-slate-800/60 transition-colors"
-                    >
-                      {task.status === "done" ? (
-                        <CheckCircle2
-                          size={22}
-                          className="text-emerald-500 shrink-0"
-                        />
-                      ) : (
-                        <Circle
-                          size={22}
-                          className="text-slate-600 shrink-0 group-hover:text-violet-400 transition-colors"
-                        />
-                      )}
-
-                      <div className="flex flex-col">
-                        <span
-                          className={`text-sm md:text-base font-medium ${task.status === "done"
-                              ? "text-slate-500 line-through"
-                              : "text-slate-200"
-                            }`}
-                        >
-                          {task.title}
-                        </span>
-                        {i === 0 && (
-                          <span className="text-[10px] text-violet-400 font-semibold">
-                            AI Prioritized
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="ml-auto flex gap-2">
-                        <div className="hidden sm:block h-2 w-12 rounded-full bg-slate-700" />
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-mono text-[#a09d96] hidden sm:inline">
+                Batch Run #4812 • 450 CVs
+              </span>
+              <span className="text-xs font-mono bg-[#cc785c] text-white px-3 py-1 rounded-md font-semibold">
+                Autonomous Mode Active
+              </span>
             </div>
           </div>
-        </div>
-      </motion.div>
+
+          {/* Main Pipeline Interface Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* Left Sidebar - Evaluation Controls (4 cols) */}
+            <div className="lg:col-span-4 bg-[#1f1e1b] rounded-xl p-5 border border-[#252320] space-y-5">
+              <div className="text-xs font-mono font-bold text-[#a09d96] uppercase tracking-wider">
+                Evaluation Criteria Weights
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-[#faf9f5]">Core Technical Mastery</span>
+                    <span className="text-[#cc785c]">40%</span>
+                  </div>
+                  <div className="w-full bg-[#252320] h-2 rounded-full">
+                    <div className="bg-[#cc785c] h-full rounded-full w-[40%]" />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-[#faf9f5]">System Architecture & Scale</span>
+                    <span className="text-[#cc785c]">30%</span>
+                  </div>
+                  <div className="w-full bg-[#252320] h-2 rounded-full">
+                    <div className="bg-[#cc785c] h-full rounded-full w-[30%]" />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-[#faf9f5]">Leadership & Impact</span>
+                    <span className="text-[#cc785c]">20%</span>
+                  </div>
+                  <div className="w-full bg-[#252320] h-2 rounded-full">
+                    <div className="bg-[#cc785c] h-full rounded-full w-[20%]" />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-[#faf9f5]">Domain Alignment</span>
+                    <span className="text-[#cc785c]">10%</span>
+                  </div>
+                  <div className="w-full bg-[#252320] h-2 rounded-full">
+                    <div className="bg-[#cc785c] h-full rounded-full w-[10%]" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-[#252320] space-y-3">
+                <div className="flex items-center justify-between text-xs text-[#a09d96]">
+                  <span>Blind Bias Shield</span>
+                  <span className="text-[#5db8a6] font-mono">ENABLED</span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-[#a09d96]">
+                  <span>Strict Experience Guard</span>
+                  <span className="text-[#5db8a6] font-mono">ACTIVE (8+ yrs)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Main Panel - Candidate Score List (8 cols) */}
+            <div className="lg:col-span-8 space-y-4">
+              <div className="flex items-center justify-between text-xs font-mono text-[#a09d96] pb-1">
+                <span>RANK ORDERED CANDIDATE MATCHES</span>
+                <span>SORTED BY CONFIDENCE SCORE</span>
+              </div>
+
+              {candidates.map((candidate, idx) => (
+                <div
+                  key={idx}
+                  className="bg-[#252320] rounded-xl p-4 border border-[#3d3d3a]/30 hover:border-[#cc785c]/50 transition-colors space-y-3"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-xs font-bold text-[#cc785c]">
+                        #{idx + 1}
+                      </span>
+                      <div>
+                        <div className="text-sm font-medium text-white flex items-center gap-2">
+                          {candidate.name}
+                          {idx === 0 && (
+                            <span className="text-[10px] bg-[#5db8a6]/20 text-[#5db8a6] border border-[#5db8a6]/30 px-2 py-0.5 rounded-full font-mono">
+                              TOP MATCH
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-[#a09d96]">
+                          {candidate.role} • {candidate.experience}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="text-base font-mono font-bold text-[#5db8a6]">
+                        {candidate.matchScore}
+                      </div>
+                      <div className="text-[10px] text-[#a09d96] font-mono">MATCH FIT</div>
+                    </div>
+                  </div>
+
+                  {/* Skills badges */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[#1f1e1b]">
+                    <div className="flex flex-wrap gap-1.5">
+                      {candidate.skills.map((skill, sIdx) => (
+                        <span
+                          key={sIdx}
+                          className="text-[11px] font-mono bg-[#1f1e1b] text-[#faf9f5] px-2 py-0.5 rounded border border-[#3d3d3a]/40"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+
+                    <span className="text-xs font-mono text-[#5db8a6] flex items-center gap-1">
+                      <CheckCircle2 size={13} />
+                      {candidate.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </motion.div>
+      </div>
     </section>
   );
 }
+

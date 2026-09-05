@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useState } from "react";
 import { signUp, signIn } from "@/lib/auth-client";
-import { Loader2, TriangleAlert, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Loader2, TriangleAlert, ArrowLeft, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 // UI Components
@@ -115,62 +114,58 @@ const SignUpCard = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row mt-10 bg-slate-950 text-slate-50">
-      {/* Left Side - Fixed */}
-      <div className="hidden lg:flex lg:w-1/2 bg-slate-900 flex-col justify-between p-12 fixed left-0 top-0 h-screen overflow-hidden z-10">
-        <div className="flex flex-col items-center justify-center flex-1">
-          <div className="text-center space-y-8">
-            <Link href="/" rel="noopener noreferrer">
-              <Image
-                src="/logo.png"
-                alt="Logo"
-                width={100}
-                height={100}
-                className="mx-auto my-10"
-              />
-            </Link>
-            <div className="space-y-4">
-              <h1 className="text-4xl font-bold text-white">
-                Join TaskGenie
-              </h1>
-              <p className="text-lg text-slate-400 max-w-md mx-auto">
-                Start organizing your tasks and boost your productivity with our
-                intuitive todo application. Create your account to get started.
-              </p>
-            </div>
+    <div className="min-h-screen flex flex-col lg:flex-row bg-[#faf9f5] text-[#141413]">
+      {/* Left Side - Brand & Editorial Mission */}
+      <div className="hidden lg:flex lg:w-1/2 bg-[#efe9de] flex-col justify-between p-12 fixed left-0 top-0 h-screen overflow-hidden z-10 border-r border-[#e6dfd8]">
+        <div className="flex flex-col items-start justify-center flex-1 space-y-8 max-w-lg mx-auto">
+          <Link href="/" className="flex items-center gap-2.5">
+            <svg className="w-8 h-8 text-[#cc785c]" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L13.5 9.5L21 11L13.5 12.5L12 20L10.5 12.5L3 11L10.5 9.5L12 2Z" />
+            </svg>
+            <span className="font-serif text-2xl font-medium tracking-tight text-[#141413]">
+              AuraScreening
+            </span>
+          </Link>
+
+          <div className="space-y-4">
+            <h1 className="font-serif text-4xl text-[#141413] tracking-tight font-normal leading-tight">
+              Create your recruiter account.
+            </h1>
+            <p className="text-base text-[#3d3d3a] leading-relaxed font-sans">
+              Start screening candidates autonomously with transparent AI scoring, skill verification, and bias-free rank ordering.
+            </p>
+          </div>
+
+          <div className="pt-6 border-t border-[#e6dfd8] w-full flex items-center gap-2 text-xs font-mono text-[#6c6a64]">
+            <ShieldCheck size={16} className="text-[#5db872]" />
+            <span>SOC2 Type II & EEOC Compliant Infrastructure</span>
           </div>
         </div>
       </div>
 
-      {/* Right Side - Scrollable */}
-      <div className="flex-1 lg:w-1/2 lg:ml-[50%] flex flex-col min-h-screen lg:min-h-0">
-        <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-y-auto">
-          <div className="w-full max-w-lg space-y-6">
-            {/* Mobile Logo */}
-            <Link
-              href="/"
-              rel="noopener noreferrer"
-              className="lg:hidden block"
-            >
-              <Image
-                src="/logo.png"
-                alt="Logo"
-                width={100}
-                height={100}
-                className="mx-auto my-10"
-              />
+      {/* Right Side - Sign Up Form */}
+      <div className="flex-1 lg:w-1/2 lg:ml-[50%] flex flex-col min-h-screen">
+        <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
+          <div className="w-full max-w-md space-y-6">
+            
+            {/* Mobile Brand Link */}
+            <Link href="/" className="lg:hidden flex items-center gap-2 justify-center mb-6">
+              <svg className="w-6 h-6 text-[#cc785c]" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L13.5 9.5L21 11L13.5 12.5L12 20L10.5 12.5L3 11L10.5 9.5L12 2Z" />
+              </svg>
+              <span className="font-serif text-xl font-medium text-[#141413]">AuraScreening</span>
             </Link>
 
-            <Card className="border-0 shadow-none bg-transparent">
-              <CardHeader className="text-center space-y-0 pb-4">
+            <Card className="border border-[#e6dfd8] shadow-xs bg-[#faf9f5] rounded-xl">
+              <CardHeader className="text-center pb-4 space-y-2">
                 {/* Back Button for Password Step */}
                 {step === "password" && (
-                  <div className="flex justify-start mb-3">
+                  <div className="flex justify-start mb-1">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setStep("email")}
-                      className="text-violet-500 hover:text-violet-400 hover:bg-transparent transition-colors text-sm"
+                      className="text-[#cc785c] hover:text-[#a9583e] hover:bg-[#efe9de] text-xs font-medium px-2 h-7"
                       disabled={loading || isPending}
                     >
                       <ArrowLeft size={14} className="mr-1" />
@@ -179,101 +174,94 @@ const SignUpCard = () => {
                   </div>
                 )}
 
-                <CardTitle className="text-2xl sm:text-3xl font-bold text-white">
+                <CardTitle className="font-serif text-2xl font-normal text-[#141413]">
                   {step === "email"
-                    ? "Create your account"
-                    : "Set your password"}
+                    ? "Create an account"
+                    : "Set up your credentials"}
                 </CardTitle>
-                <CardDescription className="text-base sm:text-lg mt-2 text-slate-400">
+                <CardDescription className="text-sm text-[#6c6a64] font-sans">
                   {step === "email"
-                    ? "Start organizing your tasks and boost productivity"
-                    : "Create a strong password to secure your account"}
+                    ? "Get started with autonomous candidate screening"
+                    : "Enter your personal details and password"}
                 </CardDescription>
 
                 {/* Show email confirmation in password step */}
                 {step === "password" && (
-                  <div className="mt-3 p-2 bg-slate-800/50 rounded-lg border border-slate-700">
-                    <p className="text-xs text-violet-400">
-                      Signing up with:{" "}
-                      <span className="font-medium text-violet-300">{email}</span>
-                    </p>
+                  <div className="mt-2 p-2 bg-[#efe9de] rounded-md border border-[#e6dfd8] text-xs text-[#3d3d3a] text-center">
+                    Signing up as <span className="font-semibold text-[#141413]">{email}</span>
                   </div>
                 )}
 
-                {/* Error Handling */}
+                {/* Validation Alerts */}
                 {!!validationError && (
-                  <div className="mt-3 rounded-md border border-red-200/30 bg-red-900/30 px-3 py-2 text-sm text-red-300 flex items-center gap-2 justify-center">
-                    <TriangleAlert className="size-4" />
-                    {validationError}
+                  <div className="mt-4 bg-[#c64545]/10 border border-[#c64545]/30 p-2.5 rounded-md flex items-center gap-x-2 text-xs text-[#c64545]">
+                    <TriangleAlert className="size-4 shrink-0" />
+                    <p>{validationError}</p>
                   </div>
                 )}
 
                 {/* Tabs */}
-                <div className="flex justify-center w-full">
+                <div className="flex justify-center w-full pt-2">
                   <Tabs
                     defaultValue="signup"
                     value="signup"
                     onValueChange={handleTabChange}
-                    className="w-full mt-4"
+                    className="w-full"
                   >
-                    <TabsList className="grid w-full grid-cols-2 h-10 bg-slate-800">
+                    <TabsList className="grid w-full grid-cols-2 h-9 bg-[#efe9de] rounded-md p-1 border border-[#e6dfd8]">
                       <TabsTrigger
                         value="signin"
-                        className="h-8 text-sm text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700"
+                        className="h-7 text-xs font-semibold text-[#6c6a64] data-[state=active]:bg-[#faf9f5] data-[state=active]:text-[#141413] rounded-sm"
                       >
                         Sign In
                       </TabsTrigger>
                       <TabsTrigger
                         value="signup"
-                        className="h-8 text-sm text-slate-300 data-[state=active]:text-white data-[state=active]:bg-slate-700"
+                        className="h-7 text-xs font-semibold text-[#141413] data-[state=active]:bg-[#faf9f5] data-[state=active]:shadow-xs rounded-sm"
                       >
-                        Sign Up
+                        Create Account
                       </TabsTrigger>
                     </TabsList>
                   </Tabs>
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4 pt-0">
                 {/* STEP 1: EMAIL & OAUTH */}
                 {step === "email" && (
                   <>
-                    {/* Google */}
+                    {/* Google Button */}
                     <Button
                       variant="outline"
-                      className="w-full h-10 sm:h-12 text-base sm:text-lg relative bg-violet-600 border-none text-white hover:text-white hover:bg-violet-500 cursor-pointer"
+                      className="w-full h-10 text-sm font-medium border-[#e6dfd8] bg-[#faf9f5] text-[#141413] hover:bg-[#efe9de] cursor-pointer"
                       type="button"
                       onClick={() => onProviderSignUp("google")}
                       disabled={loading}
                     >
                       {loadingGoogle ? (
-                        <Loader2 className="mr-2 size-5 animate-spin" />
+                        <Loader2 className="mr-2 size-4 animate-spin" />
                       ) : (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="mr-2 h-6 w-6"
+                          className="mr-2 h-4 w-4"
                           viewBox="0 0 16 16"
                         >
                           <g fill="none" fillRule="evenodd" clipRule="evenodd">
                             <path
                               fill="#f44336"
                               d="M7.209 1.061c.725-.081 1.154-.081 1.933 0a6.57 6.57 0 0 1 3.65 1.82a100 100 0 0 0-1.986 1.93q-1.876-1.59-4.188-.734q-1.696.78-2.362 2.528a78 78 0 0 1-2.148-1.658a.26.26 0 0 0-.16-.027q1.683-3.245 5.26-3.86"
-                              opacity="0.987"
                             />
                             <path
                               fill="#ffc107"
                               d="M1.946 4.92q.085-.013.161.027a78 78 0 0 0 2.148 1.658A7.6 7.6 0 0 0 4.04 7.99q.037.678.215 1.331L2 11.116Q.527 8.038 1.946 4.92"
-                              opacity="0.997"
                             />
                             <path
                               fill="#448aff"
                               d="M12.685 13.29a26 26 0 0 0-2.202-1.74q1.15-.812 1.396-2.228H8.122V6.713q3.25-.027 6.497.055q.616 3.345-1.423 6.032a7 7 0 0 1-.51.49"
-                              opacity="0.999"
                             />
                             <path
                               fill="#43a047"
                               d="M4.255 9.322q1.23 3.057 4.51 2.854a3.94 3.94 0 0 0 1.718-.626q1.148.812 2.202 1.74a6.62 6.62 0 0 1-4.027 1.684a6.4 6.4 0 0 1-1.02 0Q3.82 14.524 2 11.116z"
-                              opacity="0.993"
                             />
                           </g>
                         </svg>
@@ -282,12 +270,12 @@ const SignUpCard = () => {
                     </Button>
 
                     {/* Divider */}
-                    <div className="relative text-center text-sm">
+                    <div className="relative text-center text-xs py-1">
                       <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-slate-700" />
+                        <div className="w-full border-t border-[#e6dfd8]" />
                       </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-slate-950 px-2 text-slate-400">
+                      <div className="relative flex justify-center text-[11px] uppercase tracking-wider font-mono">
+                        <span className="bg-[#faf9f5] px-2 text-[#6c6a64]">
                           Or continue with email
                         </span>
                       </div>
@@ -295,18 +283,18 @@ const SignUpCard = () => {
 
                     {/* Email Input Form */}
                     <form onSubmit={handleEmailContinue} className="space-y-4">
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         <Label
                           htmlFor="signup-email"
-                          className="text-base sm:text-lg text-slate-300"
+                          className="text-xs font-semibold text-[#141413]"
                         >
-                          Email address
+                          Email Address
                         </Label>
                         <Input
                           id="signup-email"
                           type="email"
-                          placeholder="Enter your email address"
-                          className="h-10 sm:h-12 text-base sm:text-lg bg-slate-800 border-slate-700 text-white"
+                          placeholder="name@company.com"
+                          className="h-10 text-sm bg-[#faf9f5] border-[#e6dfd8] text-[#141413] focus:border-[#cc785c]"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           disabled={loading}
@@ -315,10 +303,10 @@ const SignUpCard = () => {
                       </div>
                       <Button
                         type="submit"
-                        className="w-full h-10 sm:h-12 text-base sm:text-lg bg-violet-600 border-none text-white hover:text-white hover:bg-violet-500 cursor-pointer"
+                        className="w-full h-10 text-sm font-semibold bg-[#cc785c] text-white hover:bg-[#a9583e] cursor-pointer"
                         disabled={!email || loading}
                       >
-                        Continue with email
+                        Continue with Email
                       </Button>
                     </form>
                   </>
@@ -329,38 +317,35 @@ const SignUpCard = () => {
                   <form onSubmit={onCredentialSignUp} className="space-y-4">
                     {/* Personal Info */}
                     <div className="space-y-3">
-                      <h3 className="text-base sm:text-lg font-semibold text-violet-500">
-                        Personal Information
-                      </h3>
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <Label
                             htmlFor="firstName"
-                            className="text-sm sm:text-base text-slate-300"
+                            className="text-xs font-semibold text-[#141413]"
                           >
-                            First name
+                            First Name
                           </Label>
                           <Input
                             id="firstName"
-                            placeholder="First name"
-                            className="h-10 sm:h-12 text-sm sm:text-base bg-slate-800 border-slate-700 text-white"
+                            placeholder="Alex"
+                            className="h-10 text-sm bg-[#faf9f5] border-[#e6dfd8] text-[#141413] focus:border-[#cc785c]"
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
                             disabled={isPending}
                             required
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-1.5">
                           <Label
                             htmlFor="lastName"
-                            className="text-sm sm:text-base text-slate-300"
+                            className="text-xs font-semibold text-[#141413]"
                           >
-                            Last name
+                            Last Name
                           </Label>
                           <Input
                             id="lastName"
-                            placeholder="Last name"
-                            className="h-10 sm:h-12 text-sm sm:text-base bg-slate-800 border-slate-700 text-white"
+                            placeholder="Rivera"
+                            className="h-10 text-sm bg-[#faf9f5] border-[#e6dfd8] text-[#141413] focus:border-[#cc785c]"
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
                             disabled={isPending}
@@ -372,14 +357,10 @@ const SignUpCard = () => {
 
                     {/* Password Section */}
                     <div className="space-y-3">
-                      <h3 className="text-base sm:text-lg font-semibold text-violet-500">
-                        Create Password
-                      </h3>
-
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         <Label
                           htmlFor="password"
-                          className="text-sm sm:text-base text-slate-300"
+                          className="text-xs font-semibold text-[#141413]"
                         >
                           Password
                         </Label>
@@ -388,7 +369,7 @@ const SignUpCard = () => {
                             id="password"
                             type={showPw ? "text" : "password"}
                             placeholder="Create a strong password"
-                            className="h-10 sm:h-12 text-sm sm:text-base pr-10 bg-slate-800 border-slate-700 text-white"
+                            className="h-10 text-sm pr-10 bg-[#faf9f5] border-[#e6dfd8] text-[#141413] focus:border-[#cc785c]"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             disabled={isPending}
@@ -399,27 +380,27 @@ const SignUpCard = () => {
                           <button
                             type="button"
                             onClick={() => setShowPw((v) => !v)}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-200 transition-colors"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6c6a64] hover:text-[#141413]"
                             tabIndex={-1}
                           >
-                            {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
+                            {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                           </button>
                         </div>
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="space-y-1.5">
                         <Label
                           htmlFor="confirm"
-                          className="text-sm sm:text-base text-slate-300"
+                          className="text-xs font-semibold text-[#141413]"
                         >
-                          Confirm password
+                          Confirm Password
                         </Label>
                         <div className="relative">
                           <Input
                             id="confirm"
                             type={showPw2 ? "text" : "password"}
-                            placeholder="Confirm your password"
-                            className="h-10 sm:h-12 text-sm sm:text-base pr-10 bg-slate-800 border-slate-700 text-white"
+                            placeholder="Confirm password"
+                            className="h-10 text-sm pr-10 bg-[#faf9f5] border-[#e6dfd8] text-[#141413] focus:border-[#cc785c]"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             disabled={isPending}
@@ -428,62 +409,50 @@ const SignUpCard = () => {
                           <button
                             type="button"
                             onClick={() => setShowPw2((v) => !v)}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-200 transition-colors"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#6c6a64] hover:text-[#141413]"
                             tabIndex={-1}
                           >
-                            {showPw2 ? <EyeOff size={18} /> : <Eye size={18} />}
+                            {showPw2 ? <EyeOff size={16} /> : <Eye size={16} />}
                           </button>
                         </div>
                       </div>
                     </div>
 
-                    <div className="pt-2 space-y-3">
+                    <div className="pt-2">
                       <Button
                         type="submit"
-                        className="w-full h-10 sm:h-12 text-base sm:text-lg bg-violet-600 border-none text-white hover:text-white hover:bg-violet-500 cursor-pointer"
+                        className="w-full h-10 text-sm font-semibold bg-[#cc785c] text-white hover:bg-[#a9583e] cursor-pointer"
                         disabled={loading || isPending}
                       >
                         {isPending || loading ? (
                           <>
-                            <Loader2 className="mr-2 size-5 animate-spin" />
-                            Creating account...
+                            <Loader2 className="mr-2 size-4 animate-spin" />
+                            Creating Account...
                           </>
                         ) : (
-                          "Create account"
+                          "Create Account"
                         )}
                       </Button>
                     </div>
                   </form>
                 )}
-
-                {/* Footer Links */}
-                <div className="text-center text-sm sm:text-base text-slate-400">
-                  Already have an account?{" "}
-                  <Link
-                    href="/login"
-                    className="font-bold text-violet-500 hover:text-violet-400 transition-colors"
-                    onClick={() => setLoading(true)}
-                  >
-                    Sign in
-                  </Link>
-                </div>
               </CardContent>
             </Card>
 
             {/* Terms Footer */}
-            <div className="text-center text-xs text-slate-400">
+            <div className="text-center text-xs text-[#6c6a64]">
               <p className="text-balance">
                 By creating an account, you agree to our{" "}
                 <Link
                   href="/terms"
-                  className="font-medium text-violet-500 underline underline-offset-4 hover:text-violet-400 transition-colors"
+                  className="font-medium text-[#cc785c] hover:underline"
                 >
                   Terms of Service
                 </Link>{" "}
                 and{" "}
                 <Link
                   href="/privacy-policy"
-                  className="font-medium text-violet-500 underline underline-offset-4 hover:text-violet-400 transition-colors"
+                  className="font-medium text-[#cc785c] hover:underline"
                 >
                   Privacy Policy
                 </Link>
@@ -498,3 +467,4 @@ const SignUpCard = () => {
 };
 
 export default SignUpCard;
+

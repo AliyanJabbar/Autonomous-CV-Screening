@@ -1,22 +1,44 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Cormorant_Garamond, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import ClientLayout from "./clientLayout";
 
-const inter = Inter({ subsets: ["latin"] });
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-cormorant",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+});
 
 export const metadata: Metadata = {
-  title: "TaskGenie",
+  title: "AuraScreening — Autonomous CV Screening Platform",
   description:
-    "todo application to manage your tasks by drag and drop",
+    "Autonomous candidate evaluation and resume shortlisting with human-level discernment and zero demographic bias.",
   keywords: [
-    "Todo App",
-    "Drag & Drop todo",
-    "Tasks",
-    "Kanbanboard",
+    "CV Screening",
+    "Autonomous Hiring",
+    "AI Candidate Evaluation",
+    "Resume Shortlisting",
+    "Talent Acquisition",
   ],
-  authors: [{ name: "Aliyan Jabbar" }],
-  creator: "Aliyan Jabbar",
+  authors: [{ name: "AuraScreening" }],
+  creator: "AuraScreening",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon", type: "image/png" },
+    ],
+    apple: "/apple-icon",
+  },
 };
 
 export default function RootLayout({
@@ -25,12 +47,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      className={`${cormorant.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+    >
       <body
-        className={`${inter.className} bg-slate-950 text-slate-50 antialiased selection:bg-indigo-500/30`}
+        className={`${inter.className} bg-[#faf9f5] text-[#141413] antialiased selection:bg-[#cc785c]/20 selection:text-[#cc785c]`}
       >
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
 }
+
