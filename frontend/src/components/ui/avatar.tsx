@@ -27,6 +27,10 @@ function AvatarImage({
 }: React.ImgHTMLAttributes<HTMLImageElement>) {
   const [hasError, setHasError] = React.useState(false)
 
+  React.useEffect(() => {
+    setHasError(false)
+  }, [src])
+
   if (!src || hasError) return null
 
   return (
@@ -34,8 +38,9 @@ function AvatarImage({
       data-slot="avatar-image"
       src={src}
       alt={alt}
+      referrerPolicy="no-referrer"
       onError={() => setHasError(true)}
-      className={cn("aspect-square size-full object-cover", className)}
+      className={cn("absolute inset-0 aspect-square size-full object-cover z-10", className)}
       {...props}
     />
   )

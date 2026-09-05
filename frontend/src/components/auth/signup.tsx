@@ -52,12 +52,26 @@ const SignUpCard = () => {
   };
 
   const onProviderSignUp = async (provider: "google") => {
-    setLoading(true);
-    setLoadingGoogle(true);
-    await signIn.social({
-      provider,
-      callbackURL: "/",
-    });
+    try {
+      setLoading(true);
+      setLoadingGoogle(true);
+      setValidationError("");
+
+      const res = await signIn.social({
+        provider,
+        callbackURL: "/",
+      });
+
+      if (res?.error) {
+        setValidationError(res.error.message || "Failed to sign up with Google");
+        setLoading(false);
+        setLoadingGoogle(false);
+      }
+    } catch (err: any) {
+      setLoading(false);
+      setLoadingGoogle(false);
+      setValidationError(err?.message || "Failed to sign up with Google");
+    }
   };
 
   const handleEmailContinue = (e: React.FormEvent) => {

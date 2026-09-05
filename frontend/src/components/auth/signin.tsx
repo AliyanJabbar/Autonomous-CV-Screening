@@ -83,13 +83,26 @@ const SignIn = () => {
 
   // 2. Handle Google Login
   const onProviderSignIn = async (provider: "google") => {
-    setLoading(true);
-    setLoadingGoogle(true);
+    try {
+      setLoading(true);
+      setLoadingGoogle(true);
+      setErrorState("");
 
-    await signIn.social({
-      provider,
-      callbackURL: "/",
-    });
+      const res = await signIn.social({
+        provider,
+        callbackURL: "/",
+      });
+
+      if (res?.error) {
+        setErrorState(res.error.message || "Failed to sign in with Google");
+        setLoading(false);
+        setLoadingGoogle(false);
+      }
+    } catch (err: any) {
+      setLoading(false);
+      setLoadingGoogle(false);
+      setErrorState(err?.message || "Failed to sign in with Google");
+    }
   };
 
   const handleTabChange = (value: string) => {
