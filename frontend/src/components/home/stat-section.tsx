@@ -6,7 +6,7 @@ const stats = [
   { label: "Screening Precision Fit", value: "98.4%" },
   { label: "Faster Shortlisting Time", value: "12x" },
   { label: "Demographic Bias Ratio", value: "0%" },
-  { label: "Resumes Evaluated Daily", value: "150k+" },
+  { label: "Free to Use", value: "100%" },
 ];
 
 export default function StatSection() {
@@ -35,4 +35,4 @@ export default function StatSection() {
       </div>
     </section>
   );
-}
+}

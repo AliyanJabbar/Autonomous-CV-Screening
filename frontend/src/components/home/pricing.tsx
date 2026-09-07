@@ -11,7 +11,7 @@ const tiers = [
     price: { monthly: "$0", yearly: "$0" },
     description: "Ideal for small teams testing AI candidate evaluation.",
     features: [
-      "Up to 100 CV evaluations / mo",
+      "Up to 10 CV evaluations / mo",
       "Standard criteria matching engine",
       "Demographic bias shield",
       "CSV & PDF export",
@@ -21,11 +21,11 @@ const tiers = [
   },
   {
     name: "Talent Pro",
-    price: { monthly: "$149", yearly: "$119" },
+    price: { monthly: "$25", yearly: "$20" },
     description: "For scaling engineering and talent acquisition teams.",
     features: [
-      "Up to 5,000 CV evaluations / mo",
-      "Advanced multi-criteria semantic radar",
+      "Up to 100 CV evaluations / mo",
+      "Multiple CV's evaluation in a single run",
       "Real-time AI decision audit logs",
       "Greenhouse & Lever ATS connectors",
       "Priority batch processing",
@@ -35,10 +35,10 @@ const tiers = [
   },
   {
     name: "Enterprise",
-    price: { monthly: "$499", yearly: "$399" },
+    price: { monthly: "$120", yearly: "$100" },
     description: "For global enterprises with high-volume recruitment.",
     features: [
-      "Unlimited CV evaluations",
+      "Up to 1000 CV evaluations",
       "Custom LLM fine-tuning on company taxonomy",
       "Dedicated SOC2 & GDPR compliance shield",
       "SLA guaranteed inference speed",
@@ -94,11 +94,10 @@ export default function Pricing() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: ind * 0.1 }}
-              className={`relative flex flex-col rounded-xl p-8 transition-all ${
-                tier.highlight
-                  ? "bg-[#181715] text-[#faf9f5] shadow-xl border border-[#252320]"
-                  : "bg-[#faf9f5] text-[#141413] border border-[#e6dfd8]"
-              }`}
+              className={`relative flex flex-col rounded-xl p-8 transition-all ${tier.highlight
+                ? "bg-[#181715] text-[#faf9f5] shadow-xl border border-[#252320]"
+                : "bg-[#faf9f5] text-[#141413] border border-[#e6dfd8]"
+                }`}
             >
               {tier.highlight && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#cc785c] px-3 py-0.5 text-[11px] font-mono font-semibold uppercase tracking-wider text-white">
@@ -134,11 +133,10 @@ export default function Pricing() {
 
               <Link
                 href="/todo"
-                className={`flex h-11 items-center justify-center rounded-md text-xs font-semibold transition-all ${
-                  tier.highlight
-                    ? "bg-[#cc785c] text-white hover:bg-[#a9583e]"
-                    : "bg-[#efe9de] text-[#141413] hover:bg-[#e8e0d2] border border-[#e6dfd8]"
-                }`}
+                className={`flex h-11 items-center justify-center rounded-md text-xs font-semibold transition-all ${tier.highlight
+                  ? "bg-[#cc785c] text-white hover:bg-[#a9583e]"
+                  : "bg-[#efe9de] text-[#141413] hover:bg-[#e8e0d2] border border-[#e6dfd8]"
+                  }`}
               >
                 {tier.buttonText}
               </Link>
