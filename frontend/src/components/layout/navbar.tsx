@@ -31,7 +31,7 @@ export default function Navbar() {
     { name: "Evaluation Pipeline", href: "/#pipeline" },
     { name: "Capabilities", href: "/#capabilities" },
     { name: "Pricing", href: "/#pricing" },
-    { name: "Screening Portal", href: "/todo" },
+    { name: "Screening Portal", href: "/screening" },
   ];
 
   const handleSmoothScroll = (
@@ -86,9 +86,6 @@ export default function Navbar() {
               <span className="font-serif text-xl tracking-tight font-medium text-[#141413]">
                 AuraScreening
               </span>
-              <span className="text-[10px] font-sans font-semibold tracking-widest text-[#cc785c] uppercase bg-[#efe9de] px-1.5 py-0.5 rounded-full">
-                Autonomous
-              </span>
             </div>
           </Link>
 
@@ -140,7 +137,7 @@ export default function Navbar() {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator className="bg-[#e6dfd8]" />
                     <DropdownMenuItem className="focus:bg-[#efe9de] focus:text-[#141413] cursor-pointer rounded-md my-0.5">
-                      <Link href="/todo" className="flex items-center gap-2 w-full text-xs font-medium">
+                      <Link href="/screening" className="flex items-center gap-2 w-full text-xs font-medium">
                         <LayoutDashboard className="h-4 w-4 text-[#cc785c]" />
                         <span>CV Screening Portal</span>
                       </Link>
@@ -163,7 +160,7 @@ export default function Navbar() {
                     Sign In
                   </Link>
                   <Link
-                    href="/todo"
+                    href="/screening"
                     className="rounded-md bg-[#cc785c] px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-[#a9583e] active:scale-95 shadow-xs"
                   >
                     Try Platform
@@ -217,7 +214,7 @@ export default function Navbar() {
                     Sign In
                   </Link>
                   <Link
-                    href="/todo"
+                    href="/screening"
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="flex justify-center items-center rounded-md bg-[#cc785c] px-4 py-2.5 text-sm font-semibold text-white"
                   >

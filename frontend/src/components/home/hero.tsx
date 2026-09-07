@@ -39,7 +39,7 @@ export default function Hero() {
             {/* CTAs */}
             <div className="flex flex-wrap items-center gap-4 pt-2">
               <Link
-                href="/todo"
+                href="/screening"
                 className="inline-flex items-center justify-center gap-2 rounded-md bg-[#cc785c] px-6 py-3 text-sm font-medium text-white transition-all hover:bg-[#a9583e] active:scale-95 shadow-xs"
               >
                 <span>Launch Screening Portal</span>
