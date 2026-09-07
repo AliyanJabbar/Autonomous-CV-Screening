@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { motion } from "motion/react";
+import { useSession } from "@/lib/auth-client";
 import Navbar from "@/components/layout/navbar";
-import Footer from "@/components/layout/footer";
 import {
   Upload,
   Link as LinkIcon,
@@ -24,6 +25,7 @@ import {
   HelpCircle,
   ExternalLink,
   Info,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -157,6 +159,29 @@ const JOB_PRESETS = [
 ];
 
 export default function ScreeningPage() {
+  const { data: sessionData } = useSession();
+  const user = sessionData?.user;
+
+  const [usage, setUsage] = useState<{
+    plan_name: string;
+    credits_remaining: number;
+    total_credits: number;
+  } | null>(null);
+
+  const fetchUsage = () => {
+    if (!user?.id) return;
+    fetch(`${BACKEND_URL}/payments/profile-usage?user_id=${encodeURIComponent(user.id)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) setUsage(data);
+      })
+      .catch(() => { });
+  };
+
+  useEffect(() => {
+    fetchUsage();
+  }, [user?.id]);
+
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
 
   // Resume State
@@ -347,6 +372,17 @@ export default function ScreeningPage() {
 
       setEvalResult(data);
       toast.success("Autonomous CV Evaluation Complete via FastAPI Backend!");
+
+      if (user?.id) {
+        fetch(`${BACKEND_URL}/payments/record-usage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: user.id }),
+        })
+          .then((res) => res.json())
+          .then(() => fetchUsage())
+          .catch(() => { });
+      }
     } catch (err: any) {
       toast.error(err.message || "Could not connect to FastAPI backend on " + BACKEND_URL);
     } finally {
@@ -357,19 +393,9 @@ export default function ScreeningPage() {
   // Copy evaluation summary
   const handleCopySummary = () => {
     if (!evalResult) return;
-    const summaryText = `CANDIDATE SCREENING REPORT: ${evalResult.candidateName}
-Role: ${jobTitle} (${seniority})
-Score: ${evalResult.overallScore}% - ${evalResult.verdictBadge}
-Executive Summary: ${evalResult.executiveSummary}
-
-Key Strengths:
-${evalResult.strengths.map((s: string) => `- ${s}`).join("\n")}
-
-Risk Factors & Gaps:
-${evalResult.gapsAndRisks.map((g: string) => `- ${g}`).join("\n")}`;
-
-    navigator.clipboard.writeText(summaryText);
-    toast.success("Evaluation summary copied to clipboard!");
+    const summary = `Candidate: ${evalResult.candidateName}\nScore: ${evalResult.matchScore}/100 (${evalResult.fitRating})\nVerdict: ${evalResult.verdict}\n\nKey Strengths:\n${evalResult.strengths?.join("\n")}\n\nGaps:\n${evalResult.missingElements?.join("\n")}`;
+    navigator.clipboard.writeText(summary);
+    toast.success("Summary copied to clipboard!");
   };
 
   // Export JSON Report
@@ -396,11 +422,24 @@ ${evalResult.gapsAndRisks.map((g: string) => `- ${g}`).join("\n")}`;
           <div className="border-b border-[#e6dfd8] pb-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#efe9de] border border-[#e6dfd8] mb-2">
-                  <span className="w-2 h-2 rounded-full bg-[#cc785c] animate-pulse" />
-                  <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-[#141413]">
-                    Agentic AI system for cv analyzing
-                  </span>
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#efe9de] border border-[#e6dfd8]">
+                    <span className="w-2 h-2 rounded-full bg-[#cc785c] animate-pulse" />
+                    <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-[#141413]">
+                      Agentic AI system for cv analyzing
+                    </span>
+                  </div>
+
+                  {usage && (
+                    <Link
+                      href="/profile"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#e6dfd8] hover:border-[#cc785c] text-[11px] text-[#141413] transition-colors shadow-xs group"
+                    >
+                      <Zap size={13} className="text-[#cc785c]" />
+                      <span className="font-medium">{usage.credits_remaining} / {usage.total_credits} Runs Left</span>
+                      <span className="text-[#cc785c] group-hover:underline">→ Profile</span>
+                    </Link>
+                  )}
                 </div>
                 <h1 className="font-serif text-3xl sm:text-4xl text-[#141413] tracking-tight font-normal">
                   Autonomous CV Screening Workspace
@@ -1111,8 +1150,6 @@ ${evalResult.gapsAndRisks.map((g: string) => `- ${g}`).join("\n")}`;
 
         </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

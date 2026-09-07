@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { signUp, signIn } from "@/lib/auth-client";
 import { Loader2, TriangleAlert, ArrowLeft, Eye, EyeOff, ShieldCheck } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // UI Components
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,8 @@ import { Label } from "@/components/ui/label";
 
 const SignUpCard = () => {
   const router = useRouter();
+  const params = useSearchParams();
+  const callbackUrl = params.get("callbackUrl") || params.get("redirect") || "/screening";
 
   // --- State Management ---
   const [step, setStep] = useState<"email" | "password">("email");
@@ -47,7 +49,10 @@ const SignUpCard = () => {
   const handleTabChange = (value: string) => {
     if (value === "signin") {
       setLoading(true);
-      router.push("/login");
+      const target = callbackUrl
+        ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+        : "/login";
+      router.push(target);
     }
   };
 
@@ -59,7 +64,7 @@ const SignUpCard = () => {
 
       const res = await signIn.social({
         provider,
-        callbackURL: "/",
+        callbackURL: callbackUrl,
       });
 
       if (res?.error) {
@@ -113,7 +118,7 @@ const SignUpCard = () => {
         },
         {
           onSuccess: () => {
-            window.location.href = "/";
+            window.location.href = callbackUrl;
           },
           onError: (ctx) => {
             setValidationError(ctx.error.message || "Failed to create account");

@@ -47,6 +47,8 @@ const SignIn = () => {
     }
   }, [params]);
 
+  const callbackUrl = params.get("callbackUrl") || params.get("redirect") || "/screening";
+
   // 1. Handle Credential Login (Email/Pass)
   const onCredentialSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -64,7 +66,7 @@ const SignIn = () => {
         },
         {
           onSuccess: () => {
-            router.push("/");
+            router.push(callbackUrl);
             router.refresh();
           },
           onError: (ctx) => {
@@ -90,7 +92,7 @@ const SignIn = () => {
 
       const res = await signIn.social({
         provider,
-        callbackURL: "/",
+        callbackURL: callbackUrl,
       });
 
       if (res?.error) {
@@ -108,7 +110,10 @@ const SignIn = () => {
   const handleTabChange = (value: string) => {
     if (value === "signup") {
       setLoading(true);
-      router.push("/register");
+      const target = callbackUrl
+        ? `/register?callbackUrl=${encodeURIComponent(callbackUrl)}`
+        : "/register";
+      router.push(target);
     }
   };
 
