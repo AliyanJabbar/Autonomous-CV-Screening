@@ -108,7 +108,7 @@ export default function Pricing() {
       const backendUrl =
         process.env.NEXT_PUBLIC_API_URL ||
         process.env.NEXT_PUBLIC_BACKEND_URL ||
-        "http://localhost:8000";
+        "https://aura-screening.fastapicloud.dev";
 
       const headers: Record<string, string> = {};
       const userToken = sessionData?.session?.token;
@@ -167,7 +167,7 @@ export default function Pricing() {
       const backendUrl =
         process.env.NEXT_PUBLIC_API_URL ||
         process.env.NEXT_PUBLIC_BACKEND_URL ||
-        "http://localhost:8000";
+        "https://aura-screening.fastapicloud.dev";
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -221,7 +221,7 @@ export default function Pricing() {
       const backendUrl =
         process.env.NEXT_PUBLIC_API_URL ||
         process.env.NEXT_PUBLIC_BACKEND_URL ||
-        "http://localhost:8000";
+        "https://aura-screening.fastapicloud.dev";
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -278,9 +278,8 @@ export default function Pricing() {
           {/* Billing Toggle */}
           <div className="pt-4 flex items-center justify-center gap-4">
             <span
-              className={`text-sm font-medium ${
-                !isYearly ? "text-[#141413]" : "text-[#6c6a64]"
-              }`}
+              className={`text-sm font-medium ${!isYearly ? "text-[#141413]" : "text-[#6c6a64]"
+                }`}
             >
               Monthly
             </span>
@@ -295,9 +294,8 @@ export default function Pricing() {
               />
             </button>
             <span
-              className={`text-sm font-medium ${
-                isYearly ? "text-[#141413]" : "text-[#6c6a64]"
-              }`}
+              className={`text-sm font-medium ${isYearly ? "text-[#141413]" : "text-[#6c6a64]"
+                }`}
             >
               Yearly <span className="text-xs text-[#5db872] font-semibold">(Save 20%)</span>
             </span>
@@ -351,13 +349,12 @@ export default function Pricing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: ind * 0.1 }}
-                className={`relative flex flex-col rounded-2xl p-8 transition-all duration-200 ${
-                  isCurrentPlan
-                    ? "bg-[#141413] text-[#faf9f5] border-2 border-[#cc785c] shadow-xl ring-2 ring-[#cc785c]/30"
-                    : tier.highlight
+                className={`relative flex flex-col rounded-2xl p-8 transition-all duration-200 ${isCurrentPlan
+                  ? "bg-[#141413] text-[#faf9f5] border-2 border-[#cc785c] shadow-xl ring-2 ring-[#cc785c]/30"
+                  : tier.highlight
                     ? "bg-[#181715] text-[#faf9f5] shadow-xl border border-[#252320]"
                     : "bg-[#faf9f5] text-[#141413] border border-[#e6dfd8] shadow-xs"
-                }`}
+                  }`}
               >
                 {/* Badges */}
                 {isCurrentPlan ? (
@@ -375,9 +372,8 @@ export default function Pricing() {
                 <div className="mb-8 space-y-3">
                   <div className="flex items-center justify-between">
                     <h3
-                      className={`text-xl font-medium ${
-                        isCurrentPlan || tier.highlight ? "text-[#faf9f5]" : "text-[#141413]"
-                      }`}
+                      className={`text-xl font-medium ${isCurrentPlan || tier.highlight ? "text-[#faf9f5]" : "text-[#141413]"
+                        }`}
                     >
                       {tier.name}
                     </h3>
@@ -393,17 +389,15 @@ export default function Pricing() {
                       {isYearly ? tier.price.yearly : tier.price.monthly}
                     </span>
                     <span
-                      className={`text-sm ${
-                        isCurrentPlan || tier.highlight ? "text-[#a09d96]" : "text-[#6c6a64]"
-                      }`}
+                      className={`text-sm ${isCurrentPlan || tier.highlight ? "text-[#a09d96]" : "text-[#6c6a64]"
+                        }`}
                     >
                       /month
                     </span>
                   </div>
                   <p
-                    className={`text-xs leading-relaxed ${
-                      isCurrentPlan || tier.highlight ? "text-[#a09d96]" : "text-[#3d3d3a]"
-                    }`}
+                    className={`text-xs leading-relaxed ${isCurrentPlan || tier.highlight ? "text-[#a09d96]" : "text-[#3d3d3a]"
+                      }`}
                   >
                     {tier.description}
                   </p>
@@ -415,13 +409,12 @@ export default function Pricing() {
                     <li key={feature} className="flex items-start gap-2.5 text-xs font-sans">
                       <Check
                         size={16}
-                        className={`shrink-0 ${
-                          isCurrentPlan
-                            ? "text-[#cc785c]"
-                            : tier.highlight
+                        className={`shrink-0 ${isCurrentPlan
+                          ? "text-[#cc785c]"
+                          : tier.highlight
                             ? "text-[#5db8a6]"
                             : "text-[#cc785c]"
-                        }`}
+                          }`}
                       />
                       <span>{feature}</span>
                     </li>
@@ -451,11 +444,10 @@ export default function Pricing() {
                   <button
                     onClick={() => handleCheckout(tier)}
                     disabled={isLoading || loadingTier !== null}
-                    className={`flex h-11 items-center justify-center rounded-xl text-xs font-semibold transition-all disabled:opacity-60 ${
-                      tier.highlight
-                        ? "bg-[#cc785c] text-white hover:bg-[#a9583e]"
-                        : "bg-[#141413] text-white hover:bg-[#252320]"
-                    }`}
+                    className={`flex h-11 items-center justify-center rounded-xl text-xs font-semibold transition-all disabled:opacity-60 ${tier.highlight
+                      ? "bg-[#cc785c] text-white hover:bg-[#a9583e]"
+                      : "bg-[#141413] text-white hover:bg-[#252320]"
+                      }`}
                   >
                     {isLoading ? (
                       <span className="inline-flex items-center gap-2">
@@ -471,11 +463,10 @@ export default function Pricing() {
                   <button
                     onClick={() => handleCheckout(tier)}
                     disabled={isLoading || loadingTier !== null}
-                    className={`flex h-11 items-center justify-center rounded-xl text-xs font-semibold transition-all disabled:opacity-60 ${
-                      tier.highlight
-                        ? "bg-[#cc785c] text-white hover:bg-[#a9583e]"
-                        : "bg-[#efe9de] text-[#141413] hover:bg-[#e8e0d2] border border-[#e6dfd8]"
-                    }`}
+                    className={`flex h-11 items-center justify-center rounded-xl text-xs font-semibold transition-all disabled:opacity-60 ${tier.highlight
+                      ? "bg-[#cc785c] text-white hover:bg-[#a9583e]"
+                      : "bg-[#efe9de] text-[#141413] hover:bg-[#e8e0d2] border border-[#e6dfd8]"
+                      }`}
                   >
                     {isLoading ? (
                       <span className="inline-flex items-center gap-2">

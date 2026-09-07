@@ -89,7 +89,7 @@ function ProfileContent() {
       const backendUrl =
         process.env.NEXT_PUBLIC_API_URL ||
         process.env.NEXT_PUBLIC_BACKEND_URL ||
-        "http://localhost:8000";
+        "https://aura-screening.fastapicloud.dev";
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -132,7 +132,7 @@ function ProfileContent() {
       const backendUrl =
         process.env.NEXT_PUBLIC_API_URL ||
         process.env.NEXT_PUBLIC_BACKEND_URL ||
-        "http://localhost:8000";
+        "https://aura-screening.fastapicloud.dev";
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -180,7 +180,7 @@ function ProfileContent() {
       const backendUrl =
         process.env.NEXT_PUBLIC_API_URL ||
         process.env.NEXT_PUBLIC_BACKEND_URL ||
-        "http://localhost:8000";
+        "https://aura-screening.fastapicloud.dev";
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -226,7 +226,7 @@ function ProfileContent() {
       const backendUrl =
         process.env.NEXT_PUBLIC_API_URL ||
         process.env.NEXT_PUBLIC_BACKEND_URL ||
-        "http://localhost:8000";
+        "https://aura-screening.fastapicloud.dev";
 
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
@@ -513,8 +513,8 @@ function ProfileContent() {
                       {isUpgrading
                         ? "Opening Stripe..."
                         : isPro
-                        ? "Upgrade to Pro Max (1,000 Runs)"
-                        : "Upgrade to Pro (100 Runs)"}
+                          ? "Upgrade to Pro Max (1,000 Runs)"
+                          : "Upgrade to Pro (100 Runs)"}
                     </span>
                   </button>
                 )}
@@ -587,8 +587,8 @@ function ProfileContent() {
                 {isProMax
                   ? "Enterprise-level recruitment operations with 1,000 evaluations."
                   : isPro
-                  ? "Scaling engineering and recruiting teams with 100 evaluations."
-                  : "Free starter tier for testing AI candidate evaluation."}
+                    ? "Scaling engineering and recruiting teams with 100 evaluations."
+                    : "Free starter tier for testing AI candidate evaluation."}
               </p>
             </div>
 

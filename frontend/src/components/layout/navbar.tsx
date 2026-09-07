@@ -30,14 +30,14 @@ export default function Navbar() {
     const backendUrl =
       process.env.NEXT_PUBLIC_API_URL ||
       process.env.NEXT_PUBLIC_BACKEND_URL ||
-      "http://localhost:8000";
+      "https://aura-screening.fastapicloud.dev";
 
     fetch(`${backendUrl}/payments/profile-usage?user_id=${encodeURIComponent(user.id)}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data) setProfileUsage(data);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [user?.id]);
 
   const getInitials = (name?: string | null, email?: string | null) => {

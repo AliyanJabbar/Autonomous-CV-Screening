@@ -29,7 +29,7 @@ function CheckoutRedirectContent() {
         const backendUrl =
           process.env.NEXT_PUBLIC_API_URL ||
           process.env.NEXT_PUBLIC_BACKEND_URL ||
-          "http://localhost:8000";
+          "https://aura-screening.fastapicloud.dev";
 
         const headers: Record<string, string> = {
           "Content-Type": "application/json",
