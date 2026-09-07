@@ -114,7 +114,7 @@ function WidgetContent() {
                 botReply += parsed.chunk;
                 setStreamingReply(botReply);
               }
-            } catch (e) {}
+            } catch (e) { }
           }
         }
       }
@@ -167,12 +167,12 @@ function WidgetContent() {
                   <div className="flex items-center gap-1.5 text-[10px] font-mono text-[#a09d96]">
                     <span className={clsx("h-1.5 w-1.5 rounded-full",
                       !isAuthenticated ? "bg-[#c64545]" : (isLoading ? "bg-[#e8a55a] animate-pulse" : "bg-[#5db872]"))} />
-                    {!isAuthenticated ? "LOCKED" : (isLoading ? "EVALUATING..." : "ACTIVE")}
+                    {!isAuthenticated ? "LOCKED" : (isLoading ? "EVALUATING..." : "In Build Phase")}
                   </div>
                 </div>
               </div>
               <div className="flex gap-1">
-                <HeaderButton onClick={() => {setMessages([]); setShowWelcome(true);}} icon={<RefreshCw size={16} />} title="Reset Chat" />
+                <HeaderButton onClick={() => { setMessages([]); setShowWelcome(true); }} icon={<RefreshCw size={16} />} title="Reset Chat" />
                 <div className="hidden md:block">
                   <HeaderButton onClick={() => setIsLarge(!isLarge)} icon={isLarge ? <Minimize2 size={16} /> : <Maximize2 size={16} />} title="Resize" />
                 </div>
@@ -187,7 +187,7 @@ function WidgetContent() {
                   <div className="mb-4 h-12 w-12 rounded-full bg-[#cc785c]/10 flex items-center justify-center text-[#cc785c]">
                     <Bot size={24} />
                   </div>
-                  
+
                   {!isAuthenticated ? (
                     <div className="flex flex-col items-center gap-3 p-5 rounded-xl border border-[#252320] bg-[#1f1e1b] w-full">
                       <Lock size={20} className="text-[#cc785c]" />

@@ -3,12 +3,28 @@ import re
 import time
 import json
 from typing import Optional, Dict, Any
-import requests
 
+from agents import Agent, Runner, ModelSettings
+from LLM.llm_config import groq_config
 from schemas import AnalyzeResumeRequest
 
 
-def run_gemini_ai_analysis(api_key: str, req: AnalyzeResumeRequest) -> Optional[Dict[str, Any]]:
+def is_quota_error(exc: Exception) -> bool:
+    msg = str(exc).lower()
+    return any(
+        keyword in msg
+        for keyword in ("rate_limit_exceeded", "quota", "429", "too many requests")
+    )
+
+
+async def run_llm_agent_analysis(req: AnalyzeResumeRequest) -> Optional[Dict[str, Any]]:
+    """
+    Evaluates candidate CV against hiring criteria using OpenAI Agents SDK.
+    Uses Groq for autonomous AI resume screening.
+    """
+    if groq_config is None:
+        return None
+
     prompt = f"""You are an Autonomous Executive Technical Recruiter & AI Resume Screening Agent.
 Evaluate this candidate CV against the specified hiring criteria.
 
@@ -25,7 +41,7 @@ TARGET HIRING CRITERIA:
 - Full Job Description: {req.job_description or "None provided"}
 - Custom Instructions / Rules: {req.custom_criteria or "None"}
 
-Return ONLY a raw JSON object (no markdown code blocks) matching this JSON structure:
+Return ONLY a raw JSON object (no markdown code blocks, no explanation text) matching this JSON structure:
 {{
   "candidateName": "Extracted candidate name",
   "overallScore": 88,
@@ -49,31 +65,57 @@ Return ONLY a raw JSON object (no markdown code blocks) matching this JSON struc
   ]
 }}"""
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-    headers = {"Content-Type": "application/json"}
-    body = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.2, "responseMimeType": "application/json"}
-    }
+    async def run_agent(run_config):
+        agent = Agent(
+            name="Autonomous CV Screening Recruiter",
+            instructions="""You are an Autonomous Executive Technical Recruiter & AI Resume Screening Agent.
+Evaluate candidate CVs against the specified hiring criteria accurately and impartially.
+Always return ONLY a valid JSON object matching the requested schema without markdown backticks or commentary.""",
+            model_settings=ModelSettings(temperature=0.2),
+        )
+        return await Runner.run(
+            agent,
+            input=prompt,
+            run_config=run_config,
+        )
 
-    resp = requests.post(url, headers=headers, json=body, timeout=20)
-    if resp.status_code != 200:
+    result_output = None
+    engine_name = ""
+
+    # Primary: Groq
+    if groq_config is not None:
+        try:
+            print("⚙️ Running CV screening agent with Groq...")
+            run_res = await run_agent(groq_config)
+            result_output = run_res.final_output
+        except Exception as e:
+            print(f"⚠️ Groq screening error: {e}")
+            return None
+    else:
         return None
 
-    data = resp.json()
-    raw_text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-    if not raw_text:
+    if not result_output:
         return None
 
+    raw_text = str(result_output).strip()
     cleaned_json = re.sub(r'```json\s*|\s*```', '', raw_text).strip()
-    result = json.loads(cleaned_json)
-    result["success"] = True
-    result["metadata"] = {
-        "evaluatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "wordCount": len(req.resume_text.split()),
-        "agentEngine": "Google Gemini 1.5 Flash (FastAPI Agent)",
-    }
-    return result
+    json_match = re.search(r'\{.*\}', cleaned_json, re.DOTALL)
+    if json_match:
+        cleaned_json = json_match.group(0)
+
+    try:
+        parsed_data = json.loads(cleaned_json)
+        parsed_data["success"] = True
+        parsed_data["metadata"] = {
+            "evaluatedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "wordCount": len(req.resume_text.split()),
+            "agentEngine": engine_name,
+        }
+        return parsed_data
+    except Exception as parse_err:
+        print(f"Failed to parse LLM agent JSON output: {parse_err}")
+        return None
+
 
 
 def run_local_python_analysis(req: AnalyzeResumeRequest, start_time: float) -> Dict[str, Any]:

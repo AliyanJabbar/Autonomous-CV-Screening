@@ -230,7 +230,7 @@ export default function ScreeningPage() {
     formData.append("file", file);
 
     try {
-      toast.info("Extracting candidate data via FastAPI backend...");
+      toast.info("Extracting candidate data...");
       const res = await fetch(`${BACKEND_URL}/extract-resume`, {
         method: "POST",
         body: formData,
@@ -253,7 +253,7 @@ export default function ScreeningPage() {
         if (text) setResumeText(text);
       };
       reader.readAsText(file);
-      toast.warning("Extracted file locally. Note: Make sure FastAPI backend is running on " + BACKEND_URL);
+      toast.warning("Extracted file locally");
     }
   };
 
@@ -279,9 +279,9 @@ export default function ScreeningPage() {
 
       setResumeText(data.raw_text);
       setResumeSource("link");
-      toast.success("Successfully extracted resume text via FastAPI!");
+      toast.success("Successfully extracted resume text.");
     } catch (err: any) {
-      toast.error(err.message || "Failed to fetch resume link from FastAPI backend.");
+      toast.error(err.message || "Failed to fetch resume link!");
     } finally {
       setIsFetchingUrl(false);
     }
@@ -371,7 +371,7 @@ export default function ScreeningPage() {
       if (!res.ok) throw new Error(data.detail || "FastAPI evaluation failed.");
 
       setEvalResult(data);
-      toast.success("Autonomous CV Evaluation Complete via FastAPI Backend!");
+      toast.success("Autonomous CV Evaluation Completed!");
 
       if (user?.id) {
         fetch(`${BACKEND_URL}/payments/record-usage`, {
@@ -384,7 +384,7 @@ export default function ScreeningPage() {
           .catch(() => { });
       }
     } catch (err: any) {
-      toast.error(err.message || "Could not connect to FastAPI backend on " + BACKEND_URL);
+      toast.error(err.message || "Could not connect to backend right now, Try Again Later!");
     } finally {
       setIsEvaluating(false);
     }
@@ -547,7 +547,10 @@ export default function ScreeningPage() {
 
               {/* Upload File */}
               {inputTab === "upload" && (
-                <div className="border-2 border-dashed border-[#e6dfd8] hover:border-[#cc785c] transition-colors rounded-2xl p-8 bg-[#faf9f5] text-center space-y-4">
+                <div className="border-2 border-dashed border-[#e6dfd8] hover:border-[#cc785c] transition-colors rounded-2xl p-8 bg-[#faf9f5] text-center space-y-4"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -563,7 +566,6 @@ export default function ScreeningPage() {
                     <p className="text-xs text-[#6c6a64] mt-1">Parses PDF, DOCX, TXT, Markdown, or JSON via FastAPI</p>
                   </div>
                   <button
-                    onClick={() => fileInputRef.current?.click()}
                     className="inline-flex items-center gap-2 rounded-md bg-[#cc785c] px-4 py-2 text-xs font-medium text-white transition-all hover:bg-[#a9583e]"
                   >
                     <FileText size={14} />

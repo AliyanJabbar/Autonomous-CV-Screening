@@ -59,6 +59,20 @@ def test_profile_usage():
     assert rec_data["status"] == "success"
     assert rec_data["credits_used"] >= 1
 
+def test_rollback_subscription():
+    # 1. Unauthenticated / missing user_id -> 401
+    res = client.post("/payments/rollback-subscription", json={"target_plan": "starter"})
+    assert res.status_code == 401
+
+    # 2. Cannot rollback if on starter -> 400
+    res = client.post("/payments/rollback-subscription", json={"target_plan": "starter", "user_id": "user_on_starter_99"})
+    assert res.status_code == 400
+    assert "Starter plan" in res.json()["detail"] or "Cannot rollback" in res.json()["detail"]
+
+    # 3. Invalid target plan -> 400
+    res = client.post("/payments/rollback-subscription", json={"target_plan": "enterprise", "user_id": "user_on_pro_99"})
+    assert res.status_code == 400
+
 if __name__ == "__main__":
     test_root_endpoints()
     test_webhook_missing_signature()
@@ -66,6 +80,7 @@ if __name__ == "__main__":
     test_session_status_invalid()
     test_create_hosted_checkout_session()
     test_profile_usage()
-    print("All payment endpoint tests passed!")
+    test_rollback_subscription()
+    print("All payment and rollback endpoint tests passed!")
 
 

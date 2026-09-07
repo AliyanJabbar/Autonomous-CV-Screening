@@ -22,7 +22,7 @@ webhook_router = APIRouter(tags=["webhooks"])
 # Stripe Initialization
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000").rstrip("/")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://aura-screening.vercel.app").rstrip("/")
 
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
@@ -69,6 +69,25 @@ class CheckoutSessionRequest(BaseModel):
     user_id: Optional[str] = Field(default=None, description="User internal identifier")
     user_email: Optional[str] = Field(default=None, description="User contact email")
     ui_mode: Optional[str] = Field(default="hosted", description="Checkout UI mode ('hosted' or 'embedded')")
+
+
+class RollbackSubscriptionRequest(BaseModel):
+    target_plan: str = Field(..., description="Target plan to rollback to ('starter', 'pro')")
+    user_id: Optional[str] = Field(default=None, description="User internal identifier")
+
+
+class PortalSessionRequest(BaseModel):
+    user_id: Optional[str] = Field(default=None, description="User internal identifier")
+    return_url: Optional[str] = Field(default=None, description="Return URL after exiting customer portal")
+
+
+PLAN_RANK = {
+    "starter": 0,
+    "pro": 1,
+    "pro max": 2,
+    "pro-max": 2,
+    "pro_max": 2,
+}
 
 
 def get_optional_current_user(authorization: Optional[str] = Header(None)) -> Optional[str]:
@@ -319,9 +338,8 @@ async def get_profile_usage(
             sub = db_session.exec(stmt).first()
 
             # Automatic Stripe reconciliation fallback:
-            # If user has no active subscription or is on starter in DB, check Stripe directly
-            # for any completed checkout sessions for this user ID
-            if (not sub or sub.plan == "starter") and STRIPE_SECRET_KEY:
+            # Only if user has NO record at all in DB and is a first-time subscriber
+            if sub is None and STRIPE_SECRET_KEY:
                 try:
                     stripe_sessions = stripe.checkout.Session.list(limit=10)
                     for s in stripe_sessions.data:
@@ -426,7 +444,185 @@ async def record_usage(
 
 
 # ==============================================================================
-# 4. BACKGROUND TASK DATABASE PROVISIONING
+# 4. SUBSCRIPTION ROLLBACK / DOWNGRADE
+# ==============================================================================
+@router.post("/rollback-subscription")
+async def rollback_subscription(
+    body: RollbackSubscriptionRequest,
+    authenticated_user_id: Optional[str] = Depends(get_optional_current_user),
+):
+    """
+    Rolls back / downgrades a user's active subscription tier to a lower plan
+    (e.g., from Pro Max to Pro, or from Pro Max / Pro to Starter).
+    Syncs with Stripe (cancellation or plan modification with proration) and updates local quota.
+    """
+    effective_user_id = authenticated_user_id or body.user_id
+    if not effective_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to rollback subscription.",
+        )
+
+    target_plan_raw = body.target_plan.strip().lower().replace("-", "_").replace(" ", "_")
+    if target_plan_raw not in ("starter", "pro"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid rollback target '{body.target_plan}'. You can only rollback to 'starter' or 'pro'.",
+        )
+
+    target_rank = PLAN_RANK.get(target_plan_raw, 0)
+
+    try:
+        with Session(engine) as db_session:
+            stmt = select(Subscription).where(Subscription.user_id == effective_user_id)
+            sub = db_session.exec(stmt).first()
+
+            current_plan = (sub.plan if sub else "starter").strip().lower().replace("-", "_").replace(" ", "_")
+            current_rank = PLAN_RANK.get(current_plan, 0)
+
+            if current_rank <= 0:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="You are currently on the Starter plan. Cannot rollback further.",
+                )
+
+            if target_rank >= current_rank:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Cannot rollback to '{body.target_plan}'. Target plan must be lower than current plan '{sub.plan}'.",
+                )
+
+            stripe_sub_id = sub.stripe_subscription_id if sub else None
+
+            # 1. Execute Stripe modification if subscription is managed through Stripe
+            if stripe_sub_id and STRIPE_SECRET_KEY:
+                try:
+                    if target_plan_raw == "starter":
+                        # Downgrade to free: Cancel active Stripe subscription immediately
+                        try:
+                            stripe.Subscription.cancel(stripe_sub_id)
+                            logger.info(f"Stripe subscription {stripe_sub_id} canceled for user {effective_user_id}")
+                        except stripe.error.InvalidRequestError as ex:
+                            logger.warning(f"Stripe cancel warning: {ex}")
+                    elif target_plan_raw == "pro":
+                        # Downgrade from Pro Max to Pro in Stripe
+                        stripe_sub = stripe.Subscription.retrieve(stripe_sub_id)
+                        if stripe_sub and stripe_sub.get("items") and stripe_sub["items"]["data"]:
+                            sub_item_id = stripe_sub["items"]["data"][0]["id"]
+                            interval = sub.interval or "month"
+                            # Determine Pro price ID
+                            pro_price_id = PRICE_ID_MAP.get(("pro", interval))
+                            if not pro_price_id:
+                                unit_amt = FALLBACK_PLAN_PRICES.get(("pro", interval), 2500)
+                                new_price = stripe.Price.create(
+                                    unit_amount=unit_amt,
+                                    currency="usd",
+                                    recurring={"interval": interval},
+                                    product_data={"name": "Autonomous CV Screening - Pro Plan"},
+                                )
+                                pro_price_id = new_price.id
+
+                            stripe.Subscription.modify(
+                                stripe_sub_id,
+                                items=[{"id": sub_item_id, "price": pro_price_id}],
+                                proration_behavior="create_prorations",
+                            )
+                            logger.info(f"Stripe subscription {stripe_sub_id} modified to Pro for user {effective_user_id}")
+                except Exception as stripe_err:
+                    logger.error(f"Error updating Stripe subscription during rollback: {stripe_err}")
+
+            # 2. Update local database record
+            if not sub:
+                sub = Subscription(
+                    user_id=effective_user_id,
+                    plan=target_plan_raw,
+                    status="active" if target_plan_raw != "starter" else "canceled",
+                    interval="month",
+                    amount=0 if target_plan_raw == "starter" else 2500,
+                    evaluations_used=0,
+                )
+                db_session.add(sub)
+            else:
+                sub.plan = target_plan_raw
+                if target_plan_raw == "starter":
+                    sub.status = "canceled"
+                    sub.amount = 0
+                else:
+                    sub.status = "active"
+                    interval = sub.interval or "month"
+                    sub.amount = FALLBACK_PLAN_PRICES.get((target_plan_raw, interval), 2500)
+                sub.updated_at = datetime.utcnow()
+                db_session.add(sub)
+
+            db_session.commit()
+            db_session.refresh(sub)
+
+            new_limit = PLAN_LIMITS.get(target_plan_raw, 10)
+            used = sub.evaluations_used or 0
+            remaining = max(0, new_limit - used)
+
+            return {
+                "status": "success",
+                "message": f"Successfully rolled back subscription to {target_plan_raw.replace('_', ' ').title()} plan.",
+                "plan": target_plan_raw,
+                "plan_name": f"{target_plan_raw.replace('_', ' ').title()} Plan",
+                "total_credits": new_limit,
+                "credits_used": used,
+                "credits_remaining": remaining,
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to rollback subscription for user {effective_user_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process rollback: {str(e)}",
+        )
+
+
+@router.post("/create-portal-session")
+async def create_portal_session(
+    body: Optional[PortalSessionRequest] = None,
+    authenticated_user_id: Optional[str] = Depends(get_optional_current_user),
+):
+    """
+    Creates a Stripe Customer Portal session so user can manage subscriptions, payment methods,
+    and invoices directly on Stripe.
+    """
+    effective_user_id = authenticated_user_id or (body.user_id if body else None)
+    if not effective_user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
+
+    if not STRIPE_SECRET_KEY:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Stripe secret key is not configured.")
+
+    try:
+        with Session(engine) as db_session:
+            stmt = select(Subscription).where(Subscription.user_id == effective_user_id)
+            sub = db_session.exec(stmt).first()
+
+            customer_id = sub.stripe_customer_id if sub else None
+            if not customer_id:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No active Stripe customer found for this user account.",
+                )
+
+            return_url = (body.return_url if body and body.return_url else f"{FRONTEND_URL}/profile")
+            portal_session = stripe.billing_portal.Session.create(
+                customer=customer_id,
+                return_url=return_url,
+            )
+            return {"url": portal_session.url}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating billing portal session: {e}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+# ==============================================================================
+# 5. BACKGROUND TASK DATABASE PROVISIONING
 # ==============================================================================
 def process_webhook_event_sync(event: dict):
     """
