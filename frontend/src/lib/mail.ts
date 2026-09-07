@@ -14,23 +14,23 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
   const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`;
 
   await transporter.sendMail({
-    from: '"TaskGenie" <noreply@taskgenie.com>',
+    from: '"Aura Screening" <noreply@aurascreening.com>',
     to: email,
-    subject: "Reset your TaskGenie password",
+    subject: "Reset your Aura Screening password",
     html: `
       <!DOCTYPE html>
       <html lang="en">
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Reset Your Password - TaskGenie</title>
+        <title>Reset Your Password - Aura Screening</title>
       </head>
       <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f8fafc;">
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
           <!-- Header -->
           <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 40px 30px; text-align: center;">
             <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.025em;">
-              TaskGenie
+              Aura Screening
             </h1>
             <p style="color: #e0e7ff; margin: 8px 0 0 0; font-size: 16px; font-weight: 400;">
               Your Personal Task Management Solution
@@ -44,7 +44,7 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
             </h2>
 
             <p style="color: #6b7280; margin: 0 0 24px 0; font-size: 16px; line-height: 1.6; text-align: center;">
-              We received a request to reset your password for your TaskGenie account. Click the button below to create a new password.
+              We received a request to reset your password for your AuraScreening account. Click the button below to create a new password.
             </p>
 
             <!-- CTA Button -->
@@ -78,7 +78,7 @@ export const sendPasswordResetEmail = async (email: string, token: string) => {
                 Need help? Contact our support team
               </p>
               <p style="color: #9ca3af; margin: 0; font-size: 12px;">
-                © ${new Date().getFullYear()} TaskGenie. All rights reserved.
+                © ${new Date().getFullYear()} Aura Screening. All rights reserved.
               </p>
             </div>
           </div>

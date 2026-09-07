@@ -3,6 +3,7 @@ import {
   pgTable,
   text,
   boolean,
+  integer,
 } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
@@ -56,9 +57,36 @@ export const verification = pgTable("verification", {
   updatedAt: timestamp("updatedAt"),
 });
 
+export const jwks = pgTable("jwks", {
+  id: text("id").primaryKey(),
+  publicKey: text("publicKey").notNull(),
+  privateKey: text("privateKey").notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  expiresAt: timestamp("expiresAt"),
+  alg: text("alg"),
+  crv: text("crv"),
+});
+
+export const subscription = pgTable("subscription", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  stripeSessionId: text("stripe_session_id"),
+  plan: text("plan").notNull().default("pro"),
+  interval: text("interval").notNull().default("month"),
+  status: text("status").notNull().default("active"),
+  amount: integer("amount"),
+  currency: text("currency").default("usd"),
+  currentPeriodEnd: timestamp("current_period_end"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 // Backward compatibility export aliases if referenced elsewhere
 export const users = user;
 export const accounts = account;
 export const sessions = session;
 export const passwordResetTokens = verification;
+export const subscriptions = subscription;
 

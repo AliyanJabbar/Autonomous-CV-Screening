@@ -75,6 +75,36 @@ async function runMigration() {
     );
   `;
 
+  await sql`
+    CREATE TABLE IF NOT EXISTS "jwks" (
+      "id" TEXT PRIMARY KEY,
+      "publicKey" TEXT NOT NULL,
+      "privateKey" TEXT NOT NULL,
+      "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
+      "expiresAt" TIMESTAMP,
+      "alg" TEXT,
+      "crv" TEXT
+    );
+  `;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS "subscription" (
+      "id" TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+      "user_id" TEXT NOT NULL,
+      "stripe_customer_id" TEXT,
+      "stripe_subscription_id" TEXT,
+      "stripe_session_id" TEXT,
+      "plan" TEXT NOT NULL DEFAULT 'pro',
+      "interval" TEXT NOT NULL DEFAULT 'month',
+      "status" TEXT NOT NULL DEFAULT 'active',
+      "amount" INTEGER,
+      "currency" TEXT DEFAULT 'usd',
+      "current_period_end" TIMESTAMP,
+      "created_at" TIMESTAMP NOT NULL DEFAULT NOW(),
+      "updated_at" TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+  `;
+
   console.log("Tables created successfully!");
   const tables = await sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'`;
   console.log("Current DB Tables:", tables);
