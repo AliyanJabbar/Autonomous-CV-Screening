@@ -1,9 +1,8 @@
-import os
 import time
 from fastapi import APIRouter, HTTPException
 
 from schemas import AnalyzeResumeRequest, AnalyzeResumeResponse
-from services.analysis_service import run_gemini_ai_analysis, run_local_python_analysis
+from services.analysis_service import run_llm_agent_analysis, run_local_python_analysis
 
 router = APIRouter(tags=["Analyze"])
 
@@ -13,6 +12,7 @@ async def analyze_resume(request: AnalyzeResumeRequest):
     """
     Endpoint 2: Analyze Resume Based on Criteria
     Evaluates candidate's resume text against job requirements, skills, experience thresholds, and criteria.
+    Uses Groq for autonomous LLM screening, with local Python engine fallback.
     Returns multi-factor score, fit rating, verdict, strengths, gaps, rubric scores, and tailored interview questions.
     """
     start_time = time.time()
@@ -24,19 +24,17 @@ async def analyze_resume(request: AnalyzeResumeRequest):
     if not request.job_title.strip():
         raise HTTPException(status_code=400, detail="Target job_title is required.")
 
-    # Check for Gemini AI key
-    gemini_api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    # 1. Autonomous LLM Agent Analysis (Groq)
+    try:
+        agent_result = await run_llm_agent_analysis(request)
+        if agent_result:
+            execution_time = int((time.time() - start_time) * 1000)
+            agent_result["metadata"]["executionTimeMs"] = execution_time
+            return AnalyzeResumeResponse(**agent_result)
+    except Exception as e:
+        print(f"Agent screening error, falling back to local Python engine: {e}")
 
-    if gemini_api_key:
-        try:
-            gemini_result = run_gemini_ai_analysis(gemini_api_key, request)
-            if gemini_result:
-                execution_time = int((time.time() - start_time) * 1000)
-                gemini_result["metadata"]["executionTimeMs"] = execution_time
-                return AnalyzeResumeResponse(**gemini_result)
-        except Exception as e:
-            print(f"Gemini API error, falling back to Python local agent engine: {e}")
-
-    # Local Python Intelligent Reasoning Engine Fallback
+    # 2. Local Python Intelligent Reasoning Engine Fallback
     local_result = run_local_python_analysis(request, start_time)
     return AnalyzeResumeResponse(**local_result)
+

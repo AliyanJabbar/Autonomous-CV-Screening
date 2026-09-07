@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { useSession } from "@/lib/auth-client";
 import {
   User,
@@ -19,6 +19,9 @@ import {
   CreditCard,
   ChevronRight,
   RefreshCw,
+  Undo2,
+  X,
+  ExternalLink,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -57,6 +60,12 @@ const PLAN_FEATURES: Record<string, string[]> = {
   ],
 };
 
+interface RollbackTarget {
+  planKey: string;
+  name: string;
+  runs: number;
+}
+
 function ProfileContent() {
   const { data: sessionData, isPending: isAuthPending } = useSession();
   const user = sessionData?.user;
@@ -64,7 +73,13 @@ function ProfileContent() {
   const [usage, setUsage] = useState<ProfileUsageData | null>(null);
   const [loadingUsage, setLoadingUsage] = useState(true);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Rollback Modal State
+  const [rollbackTarget, setRollbackTarget] = useState<RollbackTarget | null>(null);
+  const [isRollingBack, setIsRollingBack] = useState(false);
 
   const fetchUsage = async () => {
     try {
@@ -113,6 +128,7 @@ function ProfileContent() {
   const handleUpgradeCheckout = async (targetPlan: string) => {
     try {
       setIsUpgrading(true);
+      setError(null);
       const backendUrl =
         process.env.NEXT_PUBLIC_API_URL ||
         process.env.NEXT_PUBLIC_BACKEND_URL ||
@@ -149,8 +165,99 @@ function ProfileContent() {
         window.location.href = data.url;
       }
     } catch (err: any) {
-      alert(err.message || "Failed to launch Stripe checkout");
+      setError(err.message || "Failed to launch Stripe checkout");
       setIsUpgrading(false);
+    }
+  };
+
+  const handleConfirmRollback = async () => {
+    if (!rollbackTarget) return;
+
+    try {
+      setIsRollingBack(true);
+      setError(null);
+
+      const backendUrl =
+        process.env.NEXT_PUBLIC_API_URL ||
+        process.env.NEXT_PUBLIC_BACKEND_URL ||
+        "http://localhost:8000";
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      const userToken = sessionData?.session?.token;
+      if (userToken) {
+        headers["Authorization"] = `Bearer ${userToken}`;
+      }
+
+      const res = await fetch(`${backendUrl}/payments/rollback-subscription`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          target_plan: rollbackTarget.planKey,
+          user_id: user?.id || undefined,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || "Unable to process subscription rollback.");
+      }
+
+      const result = await res.json();
+      setSuccessMessage(
+        result.message || `Successfully rolled back subscription to ${rollbackTarget.name}.`
+      );
+      setRollbackTarget(null);
+      await fetchUsage();
+    } catch (err: any) {
+      setError(err.message || "Rollback failed. Please try again.");
+    } finally {
+      setIsRollingBack(false);
+    }
+  };
+
+  const handleOpenStripePortal = async () => {
+    try {
+      setIsOpeningPortal(true);
+      setError(null);
+
+      const backendUrl =
+        process.env.NEXT_PUBLIC_API_URL ||
+        process.env.NEXT_PUBLIC_BACKEND_URL ||
+        "http://localhost:8000";
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+
+      const userToken = sessionData?.session?.token;
+      if (userToken) {
+        headers["Authorization"] = `Bearer ${userToken}`;
+      }
+
+      const res = await fetch(`${backendUrl}/payments/create-portal-session`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          user_id: user?.id || undefined,
+          return_url: `${window.location.origin}/profile`,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || "Unable to open billing portal.");
+      }
+
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      setError(err.message || "Could not launch Stripe billing portal.");
+      setIsOpeningPortal(false);
     }
   };
 
@@ -210,8 +317,10 @@ function ProfileContent() {
     Math.round((usedCredits / (totalCredits || 1)) * 100)
   );
 
-  const isPro = normalizedPlan.includes("pro");
   const isProMax = normalizedPlan.includes("max");
+  const isPro = normalizedPlan.includes("pro") && !isProMax;
+  const isStarter = !isPro && !isProMax;
+
   const planFeatures =
     PLAN_FEATURES[normalizedPlan] ||
     (isProMax ? PLAN_FEATURES["pro-max"] : isPro ? PLAN_FEATURES["pro"] : PLAN_FEATURES["starter"]);
@@ -239,6 +348,34 @@ function ProfileContent() {
           </button>
         </div>
 
+        {/* Feedback Alerts */}
+        {error && (
+          <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2">
+              <AlertCircle size={16} className="shrink-0 text-red-600" />
+              <span>{error}</span>
+            </div>
+            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-800">
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={16} className="shrink-0 text-emerald-600" />
+              <span>{successMessage}</span>
+            </div>
+            <button
+              onClick={() => setSuccessMessage(null)}
+              className="text-emerald-500 hover:text-emerald-800"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
         {/* Profile Header Card */}
         <div className="bg-white border border-[#e6dfd8] rounded-3xl p-6 sm:p-8 shadow-xs">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
@@ -264,14 +401,16 @@ function ProfileContent() {
               </div>
             </div>
 
-            <Link
-              href="/screening"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#141413] text-white hover:bg-[#252320] text-xs font-medium transition-all shadow-xs"
-            >
-              <FileCheck2 size={15} />
-              <span>Launch Screening Engine</span>
-              <ArrowRight size={14} />
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/screening"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#141413] text-white hover:bg-[#252320] text-xs font-medium transition-all shadow-xs"
+              >
+                <FileCheck2 size={15} />
+                <span>Launch Screening Engine</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -348,34 +487,89 @@ function ProfileContent() {
             </div>
 
             {/* Action Buttons */}
-            <div className="pt-2 flex flex-col sm:flex-row gap-3">
-              <Link
-                href="/screening"
-                className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#cc785c] hover:bg-[#a9583e] text-white font-medium text-xs transition-all shadow-xs"
-              >
-                <Zap size={15} />
-                <span>Evaluate a Resume Now</span>
-              </Link>
-
-              {!isProMax && (
-                <button
-                  onClick={() => handleUpgradeCheckout(isPro ? "pro-max" : "pro")}
-                  disabled={isUpgrading}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#efe9de] hover:bg-[#e8e0d2] text-[#141413] border border-[#e6dfd8] font-medium text-xs transition-all"
+            <div className="pt-2 space-y-3">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  href="/screening"
+                  className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#cc785c] hover:bg-[#a9583e] text-white font-medium text-xs transition-all shadow-xs"
                 >
-                  {isUpgrading ? (
-                    <Loader2 size={14} className="animate-spin" />
-                  ) : (
-                    <CreditCard size={14} className="text-[#cc785c]" />
-                  )}
-                  <span>
-                    {isUpgrading
-                      ? "Opening Stripe..."
-                      : isPro
-                      ? "Upgrade to Pro Max (1,000 Runs)"
-                      : "Upgrade to Pro (100 Runs)"}
+                  <Zap size={15} />
+                  <span>Evaluate a Resume Now</span>
+                </Link>
+
+                {/* Upgrade Button if not on Pro Max */}
+                {!isProMax && (
+                  <button
+                    onClick={() => handleUpgradeCheckout(isPro ? "pro-max" : "pro")}
+                    disabled={isUpgrading}
+                    className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#141413] hover:bg-[#252320] text-white font-medium text-xs transition-all shadow-xs"
+                  >
+                    {isUpgrading ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <CreditCard size={14} className="text-[#cc785c]" />
+                    )}
+                    <span>
+                      {isUpgrading
+                        ? "Opening Stripe..."
+                        : isPro
+                        ? "Upgrade to Pro Max (1,000 Runs)"
+                        : "Upgrade to Pro (100 Runs)"}
+                    </span>
+                  </button>
+                )}
+              </div>
+
+              {/* Rollback / Downgrade Controls */}
+              {!isStarter && (
+                <div className="pt-2 border-t border-[#e6dfd8] flex flex-wrap items-center gap-2.5">
+                  <span className="text-[11px] font-mono uppercase text-[#6c6a64] mr-1">
+                    Subscription Management:
                   </span>
-                </button>
+
+                  {isProMax && (
+                    <button
+                      onClick={() =>
+                        setRollbackTarget({
+                          planKey: "pro",
+                          name: "Pro Plan",
+                          runs: 100,
+                        })
+                      }
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e6dfd8] hover:border-[#cc785c] text-[#141413] hover:text-[#cc785c] text-xs font-medium bg-[#faf9f5] transition-all"
+                    >
+                      <Undo2 size={13} />
+                      <span>Rollback to Pro</span>
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() =>
+                      setRollbackTarget({
+                        planKey: "starter",
+                        name: "Starter Plan (Free)",
+                        runs: 10,
+                      })
+                    }
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#e6dfd8] hover:border-red-300 text-[#6c6a64] hover:text-red-700 text-xs font-medium bg-[#faf9f5] transition-all"
+                  >
+                    <Undo2 size={13} />
+                    <span>Rollback to Starter (Cancel Subscription)</span>
+                  </button>
+
+                  <button
+                    onClick={handleOpenStripePortal}
+                    disabled={isOpeningPortal}
+                    className="ml-auto inline-flex items-center gap-1 text-xs text-[#6c6a64] hover:text-[#141413] transition-colors"
+                  >
+                    {isOpeningPortal ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <ExternalLink size={12} />
+                    )}
+                    <span>Stripe Billing Portal</span>
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -391,10 +585,10 @@ function ProfileContent() {
               </h3>
               <p className="text-xs text-[#6c6a64] mt-1">
                 {isProMax
-                  ? "For enterprise talent operations with custom fine-tuning."
+                  ? "Enterprise-level recruitment operations with 1,000 evaluations."
                   : isPro
-                  ? "For scaling engineering and recruiting teams."
-                  : "Free tier for testing AI candidate evaluation."}
+                  ? "Scaling engineering and recruiting teams with 100 evaluations."
+                  : "Free starter tier for testing AI candidate evaluation."}
               </p>
             </div>
 
@@ -414,7 +608,7 @@ function ProfileContent() {
             </div>
 
             {/* Need More Runs Banner */}
-            {!isProMax && (
+            {!isProMax ? (
               <div className="p-5 rounded-2xl bg-[#141413] text-white space-y-3">
                 <div className="flex items-center gap-2 text-[#cc785c] text-xs font-mono uppercase font-semibold">
                   <Sparkles size={14} />
@@ -431,10 +625,101 @@ function ProfileContent() {
                   <ChevronRight size={14} />
                 </Link>
               </div>
+            ) : (
+              <div className="p-5 rounded-2xl bg-[#faf9f5] border border-[#e6dfd8] text-[#141413] space-y-2">
+                <div className="flex items-center gap-2 text-emerald-700 text-xs font-mono uppercase font-semibold">
+                  <ShieldCheck size={15} />
+                  <span>Highest Tier Active</span>
+                </div>
+                <p className="text-xs text-[#6c6a64] leading-relaxed">
+                  You have full unlimited access to Pro Max features and dedicated enterprise capacity.
+                </p>
+              </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Rollback Confirmation Dialog Modal */}
+      <AnimatePresence>
+        {rollbackTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white rounded-3xl border border-[#e6dfd8] max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 text-[#141413]"
+            >
+              <div className="flex items-start justify-between">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center">
+                  <Undo2 size={24} />
+                </div>
+                <button
+                  onClick={() => setRollbackTarget(null)}
+                  disabled={isRollingBack}
+                  className="p-1 rounded-lg text-[#6c6a64] hover:text-[#141413] hover:bg-[#faf9f5]"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="font-serif text-2xl font-normal">
+                  Rollback to {rollbackTarget.name}
+                </h3>
+                <p className="text-xs text-[#6c6a64] leading-relaxed">
+                  Are you sure you want to downgrade your current subscription to{" "}
+                  <strong className="text-[#141413] font-medium">
+                    {rollbackTarget.name}
+                  </strong>
+                  ?
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-[#faf9f5] border border-[#e6dfd8] space-y-3 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[#6c6a64]">Monthly Quota:</span>
+                  <span className="font-mono font-semibold text-[#141413]">
+                    {rollbackTarget.runs} evaluations / month
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[#6c6a64]">Billing Impact:</span>
+                  <span className="font-medium text-[#141413]">
+                    {rollbackTarget.planKey === "starter"
+                      ? "Stripe subscription will be canceled"
+                      : "Stripe will prorate credit to your upcoming cycle"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => setRollbackTarget(null)}
+                  disabled={isRollingBack}
+                  className="flex-1 py-3 px-4 rounded-xl border border-[#e6dfd8] text-xs font-medium text-[#6c6a64] hover:text-[#141413] hover:bg-[#faf9f5] transition-colors text-center"
+                >
+                  Keep Current Plan
+                </button>
+                <button
+                  onClick={handleConfirmRollback}
+                  disabled={isRollingBack}
+                  className="flex-1 py-3 px-4 rounded-xl bg-[#cc785c] hover:bg-[#a9583e] text-white text-xs font-semibold transition-all flex items-center justify-center gap-2 shadow-xs"
+                >
+                  {isRollingBack ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>Rolling Back...</span>
+                    </>
+                  ) : (
+                    <span>Confirm Rollback</span>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
